@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rétro-planning vague 1 — suivi quotidien</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#E27A24; --orange-deep:#C4651A; --orange-soft:#FBE9D8;
+  --ink:#1E1E1E; --ink-2:#4C4C4C; --muted:#777370; --line:#E4E1DB; --line-2:#CFCBC4;
+  --bg:#F5F4F0; --card:#FFFFFF;
+  --red:#C8102E; --red-deep:#9C0C24; --red-soft:#FBE3E6;
+  --green:#2F8F5B; --green-soft:#E0F2E8;
+  --amber:#D48A07; --amber-soft:#FCEFD4;
+  --wine:#7A2E3A;
+  --gray-bar:#B8B4AD; --gray-soft:#ECEAE5;
+  --label-w:300px; --row-h:36px; --day-w:36px;
+  --radius:10px;
+  font-family:"Poppins","Segoe UI","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{margin:0;font-weight:600;line-height:1.2}
+.sr{position:absolute;left:-9999px}
+
+/* ---------- Header ---------- */
+.top{background:#fff;border-bottom:1px solid var(--line);padding:18px 28px 14px}
+.top-inner{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-start;justify-content:space-between;max-width:1600px;margin:0 auto}
+.brand .kicker{font-size:12px;color:var(--orange-deep);font-weight:600;margin-bottom:4px}
+.brand h1{font-size:22px;letter-spacing:-.2px}
+.brand .sub{color:var(--muted);font-size:13px;margin-top:4px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.field input,.field select{border:1px solid var(--line-2);background:#fff;border-radius:8px;padding:7px 10px;font-size:13px;color:var(--ink)}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--ink-2)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.bar:focus-visible,.ms:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.primary:hover{background:var(--orange-deep)}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+.btn.danger{color:var(--red);border-color:var(--red-soft);background:var(--red-soft)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+main{max-width:1600px;margin:0 auto;padding:18px 28px 60px;display:flex;flex-direction:column;gap:18px}
+
+/* ---------- Banner ---------- */
+.banner{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:var(--radius);border:1px solid var(--line);background:#fff}
+.banner .light{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 0 4px rgba(0,0,0,.05)}
+.banner.red{border-color:var(--red);background:var(--red-soft)}
+.banner.red .light{background:var(--red)}
+.banner.amber{border-color:var(--amber);background:var(--amber-soft)}
+.banner.amber .light{background:var(--amber)}
+.banner.green{border-color:var(--green);background:var(--green-soft)}
+.banner.green .light{background:var(--green)}
+.banner.neutral .light{background:var(--gray-bar)}
+.banner .headline{font-weight:600;font-size:15px}
+.banner .detail{color:var(--ink-2);font-size:13px}
+.banner .when{margin-left:auto;text-align:right;font-size:13px;color:var(--ink-2)}
+.banner .when b{display:block;font-size:15px;color:var(--ink)}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpis.events{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:-6px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;min-height:88px;display:flex;flex-direction:column;justify-content:space-between}
+.kpi .v{font-size:28px;font-weight:600;line-height:1}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:6px}
+.kpi.red{border-color:var(--red);background:var(--red-soft)}
+.kpi.red .v{color:var(--red)}
+.kpi.green .v{color:var(--green)}
+.kpi.orange .v{color:var(--orange-deep)}
+.kpi.amber .v{color:var(--amber)}
+.kpi .bar-mini{height:6px;background:var(--gray-soft);border-radius:4px;overflow:hidden;margin-top:8px}
+.kpi .bar-mini i{display:block;height:100%;background:var(--orange)}
+.kpi.event{border-left:4px solid var(--wine)}
+.kpi.event .v{font-size:22px}
+.kpi.event .v small{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}
+.kpi.event.passed .v{color:var(--muted)}
+
+/* ---------- Cards ---------- */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
+.card-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card-head h2{font-size:16px}
+.card-head .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px}
+.check{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-2);padding:10px 18px;border-top:1px solid var(--line)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:3px;display:inline-block}
+.sw.dm{width:10px;height:10px;transform:rotate(45deg);border-radius:2px}
+
+/* ---------- Gantt ---------- */
+.gantt-scroll{overflow-x:auto;overflow-y:hidden}
+.gantt{min-width:calc(var(--label-w) + var(--n) * var(--day-w));position:relative}
+.g-head{display:grid;grid-template-columns:var(--label-w) 1fr;position:sticky;top:0;background:#fff;z-index:5;border-bottom:1px solid var(--line-2)}
+.g-head .corner{display:flex;align-items:flex-end;padding:8px 14px;font-weight:600;color:#fff;background:var(--orange);border-top-left-radius:0}
+.g-head .days{position:relative}
+.weeks{display:grid;grid-template-columns:repeat(var(--n),1fr);height:24px;border-bottom:1px solid var(--line)}
+.weeks div{font-size:12px;font-weight:600;color:var(--ink-2);padding:3px 8px;border-left:1px solid var(--line-2);white-space:nowrap;overflow:hidden}
+.dayrow{display:grid;grid-template-columns:repeat(var(--n),1fr);height:40px}
+.dayrow div{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;line-height:1.1;border-left:1px solid var(--line)}
+.dayrow div small{font-size:10px;color:var(--muted)}
+.dayrow div.we{background:var(--gray-soft);color:var(--muted)}
+.dayrow div.today{background:var(--orange);color:#fff;font-weight:600;border-radius:6px}
+.dayrow div.today small{color:#fff}
+.g-body{position:relative}
+.g-bg{position:absolute;top:0;bottom:0;left:var(--label-w);right:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:calc(100%/var(--n)) 100%}
+.we-shade{position:absolute;top:0;bottom:0;background:rgba(0,0,0,.035)}
+.vline{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--wine);z-index:3;pointer-events:none}
+.vline.today{border-left:2px solid var(--orange)}
+.vline .tag{position:absolute;top:4px;left:4px;font-size:10px;font-weight:600;background:var(--wine);color:#fff;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.vline.today .tag{background:var(--orange)}
+.vline.evt-span{border-left:none;background:rgba(226,122,36,.12);border-left:2px solid var(--wine);border-right:2px dashed var(--wine)}
+.g-row{display:grid;grid-template-columns:var(--label-w) 1fr;position:relative;z-index:1;min-height:var(--row-h)}
+.g-row.ch{background:var(--orange-soft);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line);min-height:32px;z-index:2}
+.g-row.ch .lab{font-weight:600;color:var(--ink);padding:6px 14px;display:flex;justify-content:space-between;align-items:center;background:var(--orange);color:#fff}
+.g-row.ch .lab .cnt{font-size:11px;font-weight:500;opacity:.9}
+.g-row.ch .tl{display:flex;align-items:center;gap:10px;padding:0 10px;font-size:11px;color:var(--ink-2)}
+.g-row .lab{padding:0 14px 0 22px;display:flex;align-items:center;gap:8px;font-size:12.5px;border-bottom:1px solid var(--line);background:#fff;position:sticky;left:0;z-index:2;overflow:hidden}
+.g-row .lab .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.g-row .lab .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.g-row .lab .pct{font-size:11px;color:var(--muted);flex:none}
+.g-row .tl{position:relative;border-bottom:1px solid var(--line)}
+.bar,.ms{position:absolute;top:6px;height:calc(var(--row-h) - 12px);border:none;padding:0;background:none;text-align:left}
+.bar{border-radius:5px;background:var(--gray-bar);color:#fff;font-size:11.5px;font-weight:500;overflow:hidden;display:flex;align-items:center;padding:0 8px;z-index:2}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.18);pointer-events:none}
+.bar .txt{position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar.todo{background:var(--gray-bar)}
+.bar.soon{background:var(--ink-2)}
+.bar.ongoing{background:var(--orange)}
+.bar.risk{background:var(--amber)}
+.bar.late{background:var(--red)}
+.bar.done{background:var(--green)}
+.bar.today{background:var(--orange)}
+.ext{position:absolute;top:10px;height:calc(var(--row-h) - 20px);z-index:1;border-radius:0 4px 4px 0;
+  background:repeating-linear-gradient(135deg,var(--red) 0 4px,rgba(200,16,46,.35) 4px 8px);opacity:.9}
+.ext.done-late{background:repeating-linear-gradient(135deg,var(--green) 0 4px,rgba(47,143,91,.35) 4px 8px)}
+.ms{width:calc(var(--row-h) - 12px);z-index:2;display:flex;align-items:center;justify-content:center}
+.ms i{display:block;width:14px;height:14px;transform:rotate(45deg);border-radius:2px;background:var(--gray-bar);box-shadow:0 0 0 2px #fff}
+.ms.soon i{background:var(--ink-2)}
+.ms.today i{background:var(--orange);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--orange)}
+.ms.late i{background:var(--red)}
+.ms.done i{background:var(--green)}
+.ms-lab{position:absolute;top:0;height:var(--row-h);display:flex;align-items:center;font-size:11.5px;color:var(--ink-2);white-space:nowrap;pointer-events:none;z-index:2}
+.ms-lab.late{color:var(--red);font-weight:600}
+.ms-lab.done{color:var(--green)}
+.ms-line{position:absolute;top:calc(var(--row-h)/2 - 1px);height:0;border-top:2px dashed var(--red);z-index:1}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.badge.late{background:var(--red);color:#fff}
+.badge.risk{background:var(--amber);color:#fff}
+.badge.done{background:var(--green);color:#fff}
+.badge.ongoing{background:var(--orange);color:#fff}
+.badge.today{background:var(--orange);color:#fff}
+.badge.soon{background:var(--ink-2);color:#fff}
+.badge.todo{background:var(--gray-soft);color:var(--ink-2)}
+.badge.donelate{background:var(--green);color:#fff;outline:2px solid var(--red)}
+.pos-badge{position:absolute;top:50%;transform:translateY(-50%);z-index:4}
+.critical{color:var(--wine)}
+.g-empty{padding:30px;text-align:center;color:var(--muted)}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{border:none;background:none;padding:10px 14px;border-radius:8px 8px 0 0;color:var(--muted);font-weight:500;display:inline-flex;gap:8px;align-items:center}
+.tab[aria-selected="true"]{color:var(--ink);background:var(--bg);border:1px solid var(--line);border-bottom-color:var(--bg);margin-bottom:-1px}
+.tab .n{font-size:11px;background:var(--gray-soft);padding:1px 7px;border-radius:999px}
+.tab .n.red{background:var(--red);color:#fff}
+.panel{padding:18px;display:none}
+.panel.active{display:block}
+
+/* Focus du jour */
+.focus{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.col{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff}
+.col h3{font-size:13px;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.col h3 .n{font-size:12px;color:var(--muted);font-weight:500}
+.col.red h3{background:var(--red-soft);color:var(--red-deep);border-bottom-color:var(--red)}
+.col.orange h3{background:var(--orange-soft);color:var(--orange-deep)}
+.col.amber h3{background:var(--amber-soft);color:#7A5002}
+.col.gray h3{background:var(--gray-soft)}
+.col ul{list-style:none;margin:0;padding:6px}
+.col li{padding:8px 8px;border-radius:8px;display:flex;flex-direction:column;gap:3px;cursor:pointer}
+.col li:hover{background:var(--bg)}
+.col li .t{font-weight:500;font-size:13px}
+.col li .m{font-size:11.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.col .empty{padding:14px 10px;font-size:12.5px;color:var(--muted)}
+
+/* Table */
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end}
+.filters .field input,.filters .field select{padding:6px 9px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:600;font-size:12px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line-2);cursor:pointer;white-space:nowrap;user-select:none}
+th.sorted{color:var(--ink)}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.late td{background:var(--red-soft)}
+tr.late td:first-child{box-shadow:inset 4px 0 0 var(--red)}
+tr.done td{color:var(--muted)}
+tr.done td .t{text-decoration:line-through;text-decoration-color:var(--green)}
+td select,td input[type=number]{border:1px solid var(--line-2);border-radius:6px;padding:4px 6px;font-size:12.5px;background:#fff;max-width:120px}
+td input[type=number]{width:64px}
+td .t{font-weight:500}
+td .sub{font-size:11.5px;color:var(--muted)}
+td.num{text-align:right;white-space:nowrap}
+.delay{color:var(--red);font-weight:600}
+.link{background:none;border:none;color:var(--orange-deep);padding:0;text-decoration:underline}
+.ch-chip{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;background:var(--orange-soft);color:var(--orange-deep);font-weight:500}
+
+/* Progress */
+.prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.prog-list{display:flex;flex-direction:column;gap:10px}
+.prog-row{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;font-size:13px}
+.prog-row .track{height:14px;background:var(--gray-soft);border-radius:6px;overflow:hidden;display:flex}
+.prog-row .track i{display:block;height:100%}
+.prog-row .track .d{background:var(--green)}
+.prog-row .track .o{background:var(--orange)}
+.prog-row .track .l{background:var(--red)}
+.prog-row .n{text-align:right;color:var(--ink-2)}
+.prog-row .meta{font-size:11px;color:var(--muted)}
+.chart-wrap{border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.chart-wrap h3{font-size:13px;margin-bottom:6px}
+.chart-wrap svg{width:100%;height:auto;display:block}
+.chart-legend{display:flex;gap:16px;font-size:12px;color:var(--ink-2);margin-top:6px}
+.chart-legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+
+/* Journal */
+.log{list-style:none;margin:0;padding:0;max-height:420px;overflow:auto}
+.log li{padding:8px 4px;border-bottom:1px solid var(--line);font-size:13px;display:grid;grid-template-columns:150px 1fr;gap:10px}
+.log li time{color:var(--muted);font-size:12px}
+
+/* Dialog */
+dialog{border:none;border-radius:14px;padding:0;width:min(640px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(30,30,30,.45)}
+.dlg-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.dlg-head h2{font-size:16px}
+.dlg-body{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dlg-body .field{font-size:12px}
+.dlg-body .field input,.dlg-body .field select,.dlg-body .field textarea{border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:#fff;width:100%}
+.dlg-body .span2{grid-column:1/-1}
+.dlg-body textarea{min-height:70px;resize:vertical}
+.dlg-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted)}
+.status-pill{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--bg)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.toast.show{opacity:1}
+.notice{font-size:12.5px;color:var(--ink-2);background:var(--amber-soft);border:1px solid var(--amber);padding:8px 12px;border-radius:8px}
+
+@media (max-width:900px){
+  .top{padding:14px 16px}
+  main{padding:14px 12px 50px}
+  :root{--label-w:200px;--day-w:32px}
+  .prog-grid{grid-template-columns:1fr}
+  .banner .when{display:none}
+  .dlg-body{grid-template-columns:1fr}
+  .dlg-body .span2{grid-column:auto}
+  .prog-row{grid-template-columns:110px 1fr 50px}
+}
+@media print{
+  .controls,.tabs,.card-head .tools,.btn{display:none!important}
+  .panel{display:block!important;page-break-inside:avoid}
+  body{background:#fff}
+  .gantt-scroll{overflow:visible}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="kicker">Programme CBS, vague 1</div>
+      <h1>Trois semaines pour sécuriser le démarrage de la vague 1</h1>
+      <div class="sub" id="subTitle"></div>
+    </div>
+    <div class="controls">
+      <label class="field">Date de référence
+        <input type="date" id="refDate">
+      </label>
+      <button class="btn" id="btnToday" title="Revenir à la date du jour">Aujourd'hui</button>
+      <label class="field">Année du plan
+        <select id="yearSel"></select>
+      </label>
+      <button class="btn primary" id="btnAdd">+ Ajouter une action</button>
+      <button class="btn" id="btnExport" title="Télécharger l'état du suivi (JSON)">Exporter</button>
+      <button class="btn" id="btnImport" title="Recharger un fichier JSON exporté">Importer</button>
+      <button class="btn ghost" id="btnPrint">Imprimer</button>
+      <button class="btn ghost" id="btnReset" title="Revenir au plan initial du slide">Réinitialiser</button>
+      <input type="file" id="fileInput" accept="application/json" class="sr">
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="notice"></div>
+  <section class="banner neutral" id="banner" aria-live="polite"></section>
+  <section class="kpis" id="kpis"></section>
+  <section class="kpis events" id="evkpis"></section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Rétro-planning jour par jour</h2>
+      <div class="tools">
+        <label class="check"><input type="checkbox" id="showDone" checked> Afficher les actions terminées</label>
+        <label class="check"><input type="checkbox" id="onlyLate"> Seulement les retards et risques</label>
+        <label class="field" style="flex-direction:row;align-items:center;gap:8px">Zoom
+          <input type="range" id="zoom" min="24" max="60" step="2" value="36" style="width:110px">
+        </label>
+      </div>
+    </div>
+    <div class="gantt-scroll"><div class="gantt" id="gantt"></div></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--gray-bar)"></i> À venir</span>
+      <span><i class="sw" style="background:var(--ink-2)"></i> Imminent (J-2)</span>
+      <span><i class="sw" style="background:var(--orange)"></i> En cours / échéance du jour</span>
+      <span><i class="sw" style="background:var(--amber)"></i> En dérive (avancement insuffisant)</span>
+      <span><i class="sw" style="background:var(--red)"></i> En retard</span>
+      <span><i class="sw" style="background:repeating-linear-gradient(135deg,var(--red) 0 3px,rgba(200,16,46,.35) 3px 6px)"></i> Glissement jusqu'à aujourd'hui</span>
+      <span><i class="sw" style="background:var(--green)"></i> Terminé</span>
+      <span><i class="sw dm" style="background:var(--ink-2)"></i> Jalon</span>
+      <span><i class="sw" style="background:var(--wine);height:3px"></i> Événement programme (COPIL, Kick-off, Démarrage)</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-tab="focus" aria-selected="true">Focus du jour <span class="n" id="nFocus">0</span></button>
+      <button class="tab" role="tab" data-tab="list" aria-selected="false">Liste détaillée</button>
+      <button class="tab" role="tab" data-tab="progress" aria-selected="false">Avancement</button>
+      <button class="tab" role="tab" data-tab="events" aria-selected="false">Événements programme</button>
+      <button class="tab" role="tab" data-tab="log" aria-selected="false">Journal</button>
+    </div>
+    <div class="panel active" id="panel-focus"></div>
+    <div class="panel" id="panel-list"></div>
+    <div class="panel" id="panel-progress"></div>
+    <div class="panel" id="panel-events"></div>
+    <div class="panel" id="panel-log"></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <div class="dlg-head"><h2 id="dlgTitle">Modifier l'action</h2><button class="btn ghost" id="dlgClose" aria-label="Fermer">✕</button></div>
+  <div class="dlg-body">
+    <label class="field span2">Libellé<input id="fTitle" type="text" required></label>
+    <label class="field">Chantier<select id="fChantier"></select></label>
+    <label class="field">Type<select id="fType"><option value="activite">Activité (plage de dates)</option><option value="jalon">Jalon (date unique)</option></select></label>
+    <label class="field"><span id="fStartLab">Début</span><input id="fStart" type="date"></label>
+    <label class="field" id="fEndWrap">Fin prévue<input id="fEnd" type="date"></label>
+    <label class="field">Responsable<input id="fOwner" type="text" placeholder="Nom ou équipe"></label>
+    <label class="field">Criticité<select id="fCrit"><option value="normal">Normale</option><option value="critique">Critique (chemin critique)</option></select></label>
+    <label class="field">Statut<select id="fStatus"><option value="todo">À faire</option><option value="doing">En cours</option><option value="done">Terminé</option></select></label>
+    <label class="field">Avancement (%)<input id="fProgress" type="number" min="0" max="100" step="5"></label>
+    <label class="field">Date de fin réelle<input id="fDoneDate" type="date"></label>
+    <label class="field">Dernière mise à jour<input id="fUpdated" type="text" disabled></label>
+    <label class="field span2">Commentaire / point d'attention<textarea id="fComment" placeholder="Blocage, décision attendue, prochaine étape…"></textarea></label>
+    <div class="span2" id="fComputed"></div>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn danger" id="dlgDelete">Supprimer</button>
+    <div class="btn-row">
+      <button class="btn" id="dlgCancel">Annuler</button>
+      <button class="btn primary" id="dlgSave">Enregistrer</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgEvt">
+  <div class="dlg-head"><h2>Événements programme</h2><button class="btn ghost" id="evtClose" aria-label="Fermer">✕</button></div>
+  <div class="dlg-body" id="evtBody"></div>
+  <div class="dlg-foot"><span class="hint">Ces dates tracent les lignes verticales du planning et alimentent les compteurs J-x.</span><button class="btn primary" id="evtSave">Enregistrer</button></div>
+</dialog>
+
+<dialog id="dlgConfirm">
+  <div class="dlg-body" style="grid-template-columns:1fr"><p id="confirmMsg" style="margin:0;font-size:14px"></p></div>
+  <div class="dlg-foot" style="justify-content:flex-end"><button class="btn" id="confirmNo">Annuler</button><button class="btn danger" id="confirmYes">Confirmer</button></div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Données initiales (extraites du slide "Comité Sponsor")
+   ============================================================ */
+const DEFAULT_YEAR = 2026;
+const STORAGE_KEY = 'retroplanning_vague1_v1';
+
+const CHANTIERS = [
+  {id:'res', name:'Ressources'},
+  {id:'ach', name:'Achats'},
+  {id:'it',  name:'IT / Architecture'},
+  {id:'log', name:'Logistique'},
+  {id:'gov', name:'Gouvernance'},
+  {id:'ass', name:'Assessment'},
+  {id:'com', name:'Change & Com'},
+];
+
+// d(mois-jour) -> ISO avec l'année du plan
+const d = md => `${DEFAULT_YEAR}-${md}`;
+const A = (id, ch, title, start, end, extra={}) => ({id, chantier:ch, type:'activite', title, start:d(start), end:d(end), owner:'', crit:'normal', status:'todo', progress:0, doneDate:'', comment:'', updated:'', ...extra});
+const J = (id, ch, title, date, extra={})       => ({id, chantier:ch, type:'jalon',    title, start:d(date),  end:d(date),  owner:'', crit:'normal', status:'todo', progress:0, doneDate:'', comment:'', updated:'', ...extra});
+
+const INITIAL_ITEMS = [
+  // Ressources
+  A('i01','res','Affectations & officialisation des ressources','10-06','10-21'),
+  A('i02','res','Onboarding équipes','10-21','10-25'),
+  J('i03','res','Profils critiques V1 sécurisés','10-23',{crit:'critique'}),
+  J('i04','res','Validation des livrables ITSS','10-26'),
+  A('i05','res','Kick-off vague 1 (26-27/10)','10-26','10-27',{crit:'critique'}),
+  // Achats
+  J('i06','ach','Adjudication cockpit','10-07'),
+  J('i07','ach','Cadrage archi (AO)','10-07'),
+  J('i08','ach','BDC infra','10-09'),
+  J('i09','ach','Fin négo. Temenos','10-14',{crit:'critique'}),
+  J('i10','ach','Décision sur la partie infra pour passer commande','10-16'),
+  J('i11','ach','Contrat cockpit','10-21'),
+  J('i12','ach','Adj. désimbrication & ressources','10-21'),
+  J('i13','ach','Cadrage change','10-23'),
+  J('i14','ach','Contrat ITSS','10-24',{crit:'critique'}),
+  // IT / Architecture
+  A('i15','it','Travaux d\'architecture en interne (carto flux, legacy, référentiel, chantiers)','10-06','10-26'),
+  J('i16','it','Env. TMA','10-07'),
+  J('i17','it','Plan Env. V1 finalisé','10-13'),
+  J('i18','it','Scope V1 : désimbrication, flux, data','10-26',{crit:'critique'}),
+  // Logistique
+  A('i19','log','Préparation plateau RdC (postes, accès)','10-07','10-17'),
+  J('i20','log','Plateau prêt','10-17'),
+  // Gouvernance
+  J('i21','gov','Lettres de mission / structure cockpit','10-08'),
+  J('i22','gov','Décision outillage','10-10'),
+  J('i23','gov','Design Authority','10-14'),
+  J('i24','gov','Budget VF','10-21',{crit:'critique'}),
+  J('i25','gov','Corpus méthodo','10-22'),
+  J('i26','gov','Config. outillage & formation','10-23'),
+  // Assessment
+  A('i27','ass','Finalisation des ateliers d\'assessment','10-06','10-21'),
+  J('i28','ass','Scope fonct et Tech V1','10-21',{crit:'critique'}),
+  J('i29','ass','Sujet monétique instruit','10-22'),
+  J('i30','ass','Restitution finale','10-26'),
+  // Change & Com
+  A('i31','com','Identité visuelle : test auprès du réseau (1 sem.)','10-10','10-16'),
+  J('i32','com','Com. officielle go programme','10-26'),
+];
+
+const INITIAL_EVENTS = [
+  {id:'e1', name:'COPIL – Go vague 1', start:d('10-21'), end:d('10-21')},
+  {id:'e2', name:'Kick-off',            start:d('10-26'), end:d('10-27')},
+  {id:'e3', name:'Démarrage',           start:d('10-28'), end:d('10-28')},
+];
+
+/* ============================================================
+   Utilitaires dates
+   ============================================================ */
+const DAY = 86400000;
+const iso = dt => { const z = new Date(dt.getTime() - dt.getTimezoneOffset()*60000); return z.toISOString().slice(0,10); };
+const fromISO = s => { const [y,m,dd] = s.split('-').map(Number); return new Date(y, m-1, dd); };
+const addDays = (s, n) => iso(new Date(fromISO(s).getTime() + n*DAY));
+const diffDays = (a, b) => Math.round((fromISO(a) - fromISO(b)) / DAY); // a - b en jours
+const todayISO = () => iso(new Date());
+const WD = ['D','L','M','M','J','V','S'];
+const WD_LONG = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const MO = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const MO_LONG = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const WD3 = ['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+const fmt = s => { if(!s) return '—'; const dt = fromISO(s); return `${WD3[dt.getDay()]} ${dt.getDate()} ${MO[dt.getMonth()]}`; };
+const fmtShort = s => { if(!s) return '—'; const dt = fromISO(s); return `${dt.getDate()} ${MO[dt.getMonth()]}`; };
+const fmtLong = s => { const dt = fromISO(s); return `${WD_LONG[dt.getDay()]} ${dt.getDate()} ${MO_LONG[dt.getMonth()]} ${dt.getFullYear()}`; };
+const isWE = s => { const w = fromISO(s).getDay(); return w===0 || w===6; };
+const nowStamp = () => { const n = new Date(); return `${String(n.getDate()).padStart(2,'0')}/${String(n.getMonth()+1).padStart(2,'0')}/${n.getFullYear()} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; };
+const plural = (n, s, p) => n > 1 ? p : s;
+
+/* ============================================================
+   Stockage (tolérant : mémoire si le navigateur refuse)
+   ============================================================ */
+const store = {
+  ok: false,
+  get(){ try { const v = localStorage.getItem(STORAGE_KEY); this.ok = true; return v ? JSON.parse(v) : null; } catch(e){ this.ok = false; return null; } },
+  set(v){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); this.ok = true; } catch(e){ this.ok = false; } }
+};
+
+let state = store.get() || freshState();
+function freshState(){
+  return {
+    items: JSON.parse(JSON.stringify(INITIAL_ITEMS)),
+    events: JSON.parse(JSON.stringify(INITIAL_EVENTS)),
+    settings: { year: DEFAULT_YEAR, refDate: '', showDone: true, onlyLate: false, zoom: 36 },
+    log: [],
+    filters: { ch:'', st:'', q:'', sort:'end', dir:1 }
+  };
+}
+state.filters = state.filters || { ch:'', st:'', q:'', sort:'end', dir:1 };
+function save(){ store.set(state); }
+function addLog(text){ state.log.unshift({ts: nowStamp(), text}); if(state.log.length > 300) state.log.length = 300; }
+
+/* ============================================================
+   Moteur de statut
+   ============================================================ */
+const ref = () => state.settings.refDate || todayISO();
+
+function evalItem(it, r = ref()){
+  const isJ = it.type === 'jalon';
+  const start = it.start, end = it.end;
+  const dur = diffDays(end, start) + 1;
+  if (it.status === 'done'){
+    const late = it.doneDate && diffDays(it.doneDate, end) > 0;
+    return { key:'done', late: !!late, delay: late ? diffDays(it.doneDate, end) : 0,
+             label: late ? `Terminé avec ${diffDays(it.doneDate,end)} j de retard` : 'Terminé' };
+  }
+  if (diffDays(r, end) > 0){
+    const delay = diffDays(r, end);
+    return { key:'late', delay, label:`En retard de ${delay} j` };
+  }
+  if (diffDays(r, start) >= 0){
+    if (isJ) return { key:'today', delay:0, label:'Échéance aujourd\'hui' };
+    const elapsed = diffDays(r, start) + 1;
+    const expected = Math.round(elapsed / dur * 100);
+    const prog = Number(it.progress) || 0;
+    if (prog + 20 < expected && dur > 1) return { key:'risk', delay:0, expected, gap: expected - prog, label:`En dérive : ${prog}% réalisé pour ${expected}% attendu` };
+    return { key:'ongoing', delay:0, expected, label: diffDays(end, r) === 0 ? 'Se termine aujourd\'hui' : `En cours (fin dans ${diffDays(end, r)} j)` };
+  }
+  const inDays = diffDays(start, r);
+  if (inDays <= 2) return { key:'soon', delay:0, inDays, label:`Démarre dans ${inDays} j` };
+  return { key:'todo', delay:0, inDays, label:`À venir (J-${inDays})` };
+}
+
+const KEY_LABEL = { done:'Terminé', late:'En retard', risk:'En dérive', today:'Échéance du jour', ongoing:'En cours', soon:'Imminent', todo:'À venir' };
+const chName = id => (CHANTIERS.find(c => c.id === id) || {name:id}).name;
+
+/* ============================================================
+   Plage du planning
+   ============================================================ */
+function range(){
+  const all = [...state.items.flatMap(i => [i.start, i.end]), ...state.events.flatMap(e => [e.start, e.end])].filter(Boolean).sort();
+  let s = all[0], e = all[all.length - 1];
+  const r = ref();
+  if (diffDays(r, s) < 0 && diffDays(s, r) <= 10) s = r;
+  if (diffDays(r, e) > 0 && diffDays(r, e) <= 10) e = r;
+  s = addDays(s, -1); e = addDays(e, 2);
+  const days = []; for (let x = s; diffDays(x, e) <= 0; x = addDays(x, 1)) days.push(x);
+  return { s, e, days, n: days.length };
+}
+const pct = (dateISO, R) => (diffDays(dateISO, R.s)) / R.n * 100;         // bord gauche du jour
+const pctMid = (dateISO, R) => (diffDays(dateISO, R.s) + 0.5) / R.n * 100;
+
+/* ============================================================
+   Rendu
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function render(){
+  const r = ref();
+  $('#refDate').value = r;
+  $('#showDone').checked = state.settings.showDone;
+  $('#onlyLate').checked = state.settings.onlyLate;
+  $('#zoom').value = state.settings.zoom;
+  document.documentElement.style.setProperty('--day-w', state.settings.zoom + 'px');
+  renderNotice();
+  renderBanner();
+  renderKpis();
+  renderGantt();
+  renderFocus();
+  renderList();
+  renderProgress();
+  renderEvents();
+  renderLog();
+  $('#subTitle').textContent = `${state.items.length} actions sur ${CHANTIERS.length} chantiers · référence : ${fmtLong(r)}${state.settings.refDate ? ' (date simulée)' : ''}`;
+}
+
+function renderNotice(){
+  const r = ref(), R = range();
+  const msgs = [];
+  if (!store.ok) msgs.push('La sauvegarde automatique n\'est pas disponible dans cet environnement : utilisez Exporter / Importer pour conserver votre suivi.');
+  const first = state.items.map(i => i.start).sort()[0], last = state.items.map(i => i.end).sort().pop();
+  if (!state.settings.refDate && (diffDays(r, first) < -10 || diffDays(r, last) > 10))
+    msgs.push(`La date du jour (${fmtLong(r)}) est hors de la période du plan (${fmtShort(first)} → ${fmtShort(last)}). Choisissez une date de référence pour simuler le suivi, ou ajustez l'année du plan.`);
+  $('#notice').innerHTML = msgs.map(m => `<div class="notice">${esc(m)}</div>`).join('');
+  $('#notice').style.display = msgs.length ? 'flex' : 'none';
+  $('#notice').style.flexDirection = 'column'; $('#notice').style.gap = '8px';
+}
+
+function stats(){
+  const r = ref();
+  const ev = state.items.map(it => ({it, s: evalItem(it, r)}));
+  const by = k => ev.filter(x => x.s.key === k);
+  const n = ev.length;
+  const done = by('done').length;
+  const late = by('late');
+  const risk = by('risk');
+  const progress = n ? Math.round(ev.reduce((a, x) => a + (x.it.status === 'done' ? 100 : (x.it.type === 'jalon' ? 0 : Number(x.it.progress) || 0)), 0) / n) : 0;
+  const planned = n ? Math.round(ev.filter(x => diffDays(r, x.it.end) >= 0).length / n * 100) : 0;
+  return { ev, n, done, late, risk, today: by('today'), ongoing: by('ongoing'), soon: by('soon'), todo: by('todo'), progress, planned };
+}
+
+function renderBanner(){
+  const S = stats(), b = $('#banner');
+  const critLate = S.late.filter(x => x.it.crit === 'critique');
+  let cls = 'green', head = 'Planning tenu : aucune action en retard', det = '';
+  if (S.late.length){
+    const worst = [...S.late].sort((a, b) => b.s.delay - a.s.delay)[0];
+    cls = (S.late.length >= 3 || critLate.length) ? 'red' : 'amber';
+    head = `${S.late.length} ${plural(S.late.length,'action en retard','actions en retard')}${critLate.length ? ` dont ${critLate.length} sur le chemin critique` : ''}`;
+    det = `Retard le plus important : ${worst.it.title} (${chName(worst.it.chantier)}), +${worst.s.delay} j.`;
+  } else if (S.risk.length){
+    cls = 'amber'; head = `${S.risk.length} ${plural(S.risk.length,'activité en dérive','activités en dérive')}`;
+    det = 'L\'avancement déclaré est en dessous de ce que le calendrier attend. Vérifiez les points de blocage avant qu\'ils ne deviennent des retards.';
+  } else {
+    det = S.today.length ? `${S.today.length} ${plural(S.today.length,'échéance','échéances')} à tenir aujourd'hui.` : (S.ongoing.length ? `${S.ongoing.length} ${plural(S.ongoing.length,'activité en cours','activités en cours')}, avancement global ${S.progress}%.` : 'Rien d\'exigible aujourd\'hui.');
+  }
+  if (S.done === S.n && S.n) { cls = 'green'; head = 'Toutes les actions sont terminées'; det = ''; }
+  b.className = `banner ${cls}`;
+  const r = ref();
+  b.innerHTML = `<span class="light"></span><div><div class="headline">${esc(head)}</div>${det ? `<div class="detail">${esc(det)}</div>` : ''}</div>
+    <div class="when">Situation au<b>${fmtLong(r)}</b></div>`;
+}
+
+function renderKpis(){
+  const S = stats(), r = ref();
+  const evts = state.events.map(e => {
+    const dIn = diffDays(e.start, r), dEnd = diffDays(e.end, r);
+    let v, cls = '';
+    if (dEnd < 0) { v = 'passé'; cls = 'passed'; }
+    else if (dIn <= 0) { v = 'en cours'; }
+    else v = `J-${dIn}`;
+    return `<div class="kpi event ${cls}"><div class="v">${v}<small>${esc(fmtShort(e.start))}${e.end !== e.start ? '–' + esc(fmtShort(e.end)) : ''}</small></div><div class="l">${esc(e.name)}</div></div>`;
+  }).join('');
+  $('#kpis').innerHTML = `
+    <div class="kpi orange"><div class="v">${S.progress}%</div><div class="l">Avancement réel (attendu ${S.planned}%)</div><div class="bar-mini"><i style="width:${S.progress}%"></i></div></div>
+    <div class="kpi green"><div class="v">${S.done}<span style="font-size:14px;color:var(--muted)">/${S.n}</span></div><div class="l">Actions terminées</div></div>
+    <div class="kpi ${S.late.length ? 'red' : ''}"><div class="v">${S.late.length}</div><div class="l">En retard${S.late.length ? ` · cumul ${S.late.reduce((a,x)=>a+x.s.delay,0)} j` : ''}</div></div>
+    <div class="kpi ${S.risk.length ? 'amber' : ''}"><div class="v">${S.risk.length}</div><div class="l">En dérive</div></div>
+    <div class="kpi orange"><div class="v">${S.today.length + S.ongoing.length}</div><div class="l">En cours / échéance du jour</div></div>
+    <div class="kpi"><div class="v">${S.soon.length + S.todo.length}</div><div class="l">À venir</div></div>
+    `;
+  $('#evkpis').innerHTML = evts;
+}
+
+function visibleItems(){
+  const r = ref();
+  return state.items.filter(it => {
+    const s = evalItem(it, r);
+    if (!state.settings.showDone && s.key === 'done') return false;
+    if (state.settings.onlyLate && !['late','risk'].includes(s.key)) return false;
+    return true;
+  });
+}
+
+function renderGantt(){
+  const R = range(), r = ref();
+  const g = $('#gantt');
+  g.style.setProperty('--n', R.n);
+  const items = visibleItems();
+
+  // --- en-tête : semaines + jours
+  let weeks = '';
+  let i = 0;
+  while (i < R.n){
+    const dt = fromISO(R.days[i]);
+    const dow = (dt.getDay() + 6) % 7; // 0 = lundi
+    const span = Math.min(7 - dow, R.n - i);
+    const monday = addDays(R.days[i], -dow);
+    weeks += `<div style="grid-column:span ${span}">${span >= 3 ? 'Sem. du ' + fmtShort(monday) : ''}</div>`;
+    i += span;
+  }
+  const days = R.days.map(x => { const dt = fromISO(x); return `<div class="${isWE(x) ? 'we' : ''} ${x === r ? 'today' : ''}"><small>${WD[dt.getDay()]}</small>${dt.getDate()}</div>`; }).join('');
+
+  // --- overlays : week-ends, événements, aujourd'hui
+  const weShade = R.days.filter(isWE).map(x => `<div class="we-shade" style="left:${pct(x,R)}%;width:${100/R.n}%"></div>`).join('');
+  const evLines = state.events.map(e => {
+    if (diffDays(e.start, R.s) < 0 || diffDays(e.end, R.e) > 0) return '';
+    if (e.end !== e.start) return `<div class="vline evt-span" style="left:${pct(e.start,R)}%;width:${(diffDays(e.end,e.start)+1)/R.n*100}%"><span class="tag">${esc(e.name)}</span></div>`;
+    return `<div class="vline" style="left:${pctMid(e.start,R)}%"><span class="tag">${esc(e.name)}</span></div>`;
+  }).join('');
+  const todayLine = (diffDays(r, R.s) >= 0 && diffDays(r, R.e) <= 0) ? `<div class="vline today" style="left:${pctMid(r,R)}%"></div>` : '';
+
+  // --- lignes
+  let rows = '';
+  for (const ch of CHANTIERS){
+    const its = items.filter(it => it.chantier === ch.id).sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+    const all = state.items.filter(it => it.chantier === ch.id);
+    const ev = all.map(it => evalItem(it, r));
+    const nLate = ev.filter(s => s.key === 'late').length, nDone = ev.filter(s => s.key === 'done').length;
+    if (!its.length && (state.settings.onlyLate || !state.settings.showDone)) continue;
+    rows += `<div class="g-row ch"><div class="lab"><span>${esc(ch.name)}</span><span class="cnt">${nDone}/${all.length} terminées</span></div><div class="tl">${nLate ? `<span class="badge late">${nLate} en retard</span>` : ''}</div></div>`;
+    for (const it of its){
+      const s = evalItem(it, r);
+      const crit = it.crit === 'critique' ? ' <span class="critical" title="Chemin critique">◆</span>' : '';
+      const dotColor = { done:'var(--green)', late:'var(--red)', risk:'var(--amber)', today:'var(--orange)', ongoing:'var(--orange)', soon:'var(--ink-2)', todo:'var(--gray-bar)' }[s.key];
+      let tl = '';
+      if (it.type === 'activite'){
+        const left = pct(it.start, R), width = (diffDays(it.end, it.start) + 1) / R.n * 100;
+        const prog = it.status === 'done' ? 100 : (Number(it.progress) || 0);
+        // extension de glissement
+        if (s.key === 'late') tl += `<div class="ext" style="left:${left + width}%;width:${(diffDays(r, it.end)) / R.n * 100}%"></div>`;
+        if (s.key === 'done' && s.late) tl += `<div class="ext done-late" style="left:${left + width}%;width:${(diffDays(it.doneDate, it.end)) / R.n * 100}%"></div>`;
+        tl += `<button class="bar ${s.key}" data-id="${it.id}" style="left:${left}%;width:${width}%" title="${esc(it.title)} — ${esc(s.label)}"><span class="fill" style="width:${prog}%"></span><span class="txt">${esc(it.title)}</span></button>`;
+        if (s.key === 'late') tl += `<span class="badge late pos-badge" style="left:calc(${pctMid(r,R)}% + 6px)">+${s.delay} j</span>`;
+        else if (s.key === 'risk') tl += `<span class="badge risk pos-badge" style="left:calc(${left + width}% + 6px)">${prog}% / ${s.expected}%</span>`;
+        else if (s.key === 'done' && s.late) tl += `<span class="badge donelate pos-badge" style="left:calc(${pctMid(it.doneDate,R)}% + 10px)">terminé +${s.delay} j</span>`;
+      } else {
+        const mid = pctMid(it.start, R);
+        const labelRight = mid < 72;
+        if (s.key === 'late') tl += `<div class="ms-line" style="left:${mid}%;width:${pctMid(r,R) - mid}%"></div>`;
+        tl += `<button class="ms ${s.key}" data-id="${it.id}" style="left:calc(${mid}% - (var(--row-h) - 12px)/2)" title="${esc(it.title)} — ${esc(s.label)}"><i></i></button>`;
+        let labTxt = esc(it.title);
+        if (s.key === 'late') labTxt = `<span class="badge late" style="margin-right:6px">+${s.delay} j</span>${labTxt}`;
+        if (s.key === 'done' && s.late) labTxt = `<span class="badge donelate" style="margin-right:6px">+${s.delay} j</span>${labTxt}`;
+        const anchor = s.key === 'late' ? pctMid(r, R) : mid;
+        tl += labelRight
+          ? `<span class="ms-lab ${s.key}" style="left:calc(${anchor}% + ${s.key === 'done' && s.late ? 20 : 14}px)">${labTxt}</span>`
+          : `<span class="ms-lab ${s.key}" style="right:calc(${100 - mid}% + 14px)">${labTxt}</span>`;
+      }
+      const pctTxt = it.type === 'activite' ? `${it.status === 'done' ? 100 : (Number(it.progress) || 0)}%` : (it.status === 'done' ? '✓' : fmtShort(it.start));
+      rows += `<div class="g-row"><div class="lab"><span class="dot" style="background:${dotColor}"></span><span class="t" title="${esc(it.title)}">${esc(it.title)}${crit}</span><span class="pct">${pctTxt}</span></div><div class="tl">${tl}</div></div>`;
+    }
+  }
+  if (!rows) rows = `<div class="g-empty">Aucune action à afficher avec ces filtres.</div>`;
+
+  g.innerHTML = `
+    <div class="g-head"><div class="corner">Chantier</div><div class="days"><div class="weeks">${weeks}</div><div class="dayrow">${days}</div></div></div>
+    <div class="g-body">
+      <div class="g-bg">${weShade}</div>
+      ${rows}
+      <div class="g-bg" style="z-index:3">${evLines}${todayLine}</div>
+    </div>`;
+  g.querySelectorAll('[data-id]').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.id)));
+}
+
+function itemLi(x){
+  const it = x.it, s = x.s;
+  const when = it.type === 'jalon' ? fmt(it.start) : `${fmtShort(it.start)} → ${fmt(it.end)}`;
+  return `<li data-id="${it.id}"><span class="t">${esc(it.title)}${it.crit === 'critique' ? ' <span class="critical">◆</span>' : ''}</span>
+    <span class="m"><span class="ch-chip">${esc(chName(it.chantier))}</span><span>${when}</span>${it.owner ? `<span>· ${esc(it.owner)}</span>` : ''}${s.key === 'late' ? `<span class="delay">+${s.delay} j</span>` : ''}${s.key === 'risk' ? `<span style="color:var(--amber);font-weight:600">${it.progress}% / ${s.expected}%</span>` : ''}</span>
+    ${it.comment ? `<span class="m" style="color:var(--ink-2)">${esc(it.comment)}</span>` : ''}</li>`;
+}
+
+function renderFocus(){
+  const S = stats(), r = ref();
+  const dueToday = S.ev.filter(x => x.s.key === 'today' || (x.s.key === 'ongoing' && x.it.end === r));
+  const ongoing = S.ev.filter(x => x.s.key === 'ongoing' && x.it.end !== r);
+  const week = S.ev.filter(x => ['soon','todo'].includes(x.s.key) && diffDays(x.it.start, r) <= 7).sort((a, b) => a.it.start.localeCompare(b.it.start));
+  const late = [...S.late].sort((a, b) => b.s.delay - a.s.delay);
+  const doneRecent = S.ev.filter(x => x.s.key === 'done' && x.it.doneDate && diffDays(r, x.it.doneDate) <= 3 && diffDays(r, x.it.doneDate) >= 0);
+  $('#nFocus').textContent = late.length + S.risk.length + dueToday.length;
+  $('#nFocus').className = 'n' + (late.length ? ' red' : '');
+  const col = (cls, title, arr, empty) => `<div class="col ${cls}"><h3>${title}<span class="n">${arr.length}</span></h3>${arr.length ? `<ul>${arr.map(itemLi).join('')}</ul>` : `<div class="empty">${empty}</div>`}</div>`;
+  $('#panel-focus').innerHTML = `<div class="focus">
+    ${col('red', 'En retard', late, 'Aucun retard. Continuez ainsi.')}
+    ${col('amber', 'En dérive', S.risk, 'Toutes les activités en cours avancent au rythme prévu.')}
+    ${col('orange', 'À tenir aujourd\'hui', dueToday, 'Aucune échéance aujourd\'hui.')}
+    ${col('orange', 'En cours', ongoing, 'Aucune activité en cours.')}
+    ${col('gray', 'À venir sous 7 jours', week, 'Rien ne démarre dans la semaine.')}
+    ${col('gray', 'Terminé ces 3 derniers jours', doneRecent, 'Rien de clôturé récemment (renseignez la date de fin réelle).')}
+  </div>`;
+  $('#panel-focus').querySelectorAll('li[data-id]').forEach(li => li.addEventListener('click', () => openEdit(li.dataset.id)));
+}
+
+function renderList(){
+  const r = ref(), F = state.filters;
+  let rows = state.items.map(it => ({ it, s: evalItem(it, r) }));
+  if (F.ch) rows = rows.filter(x => x.it.chantier === F.ch);
+  if (F.st) rows = rows.filter(x => x.s.key === F.st);
+  if (F.q) { const q = F.q.toLowerCase(); rows = rows.filter(x => (x.it.title + ' ' + x.it.owner + ' ' + x.it.comment).toLowerCase().includes(q)); }
+  const order = { late:0, risk:1, today:2, ongoing:3, soon:4, todo:5, done:6 };
+  rows.sort((a, b) => {
+    let v = 0;
+    switch (F.sort){
+      case 'title': v = a.it.title.localeCompare(b.it.title); break;
+      case 'ch': v = chName(a.it.chantier).localeCompare(chName(b.it.chantier)); break;
+      case 'start': v = a.it.start.localeCompare(b.it.start); break;
+      case 'end': v = a.it.end.localeCompare(b.it.end); break;
+      case 'status': v = order[a.s.key] - order[b.s.key] || b.s.delay - a.s.delay; break;
+      case 'owner': v = (a.it.owner || '').localeCompare(b.it.owner || ''); break;
+      case 'delay': v = b.s.delay - a.s.delay; break;
+    }
+    return v * F.dir;
+  });
+  const th = (k, l) => `<th data-sort="${k}" class="${F.sort === k ? 'sorted' : ''}">${l}${F.sort === k ? (F.dir > 0 ? ' ↑' : ' ↓') : ''}</th>`;
+  const chOpts = `<option value="">Tous les chantiers</option>` + CHANTIERS.map(c => `<option value="${c.id}" ${F.ch === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  const stOpts = `<option value="">Tous les statuts</option>` + Object.entries(KEY_LABEL).map(([k, l]) => `<option value="${k}" ${F.st === k ? 'selected' : ''}>${l}</option>`).join('');
+  $('#panel-list').innerHTML = `
+    <div class="filters">
+      <label class="field">Chantier<select id="flCh">${chOpts}</select></label>
+      <label class="field">Statut<select id="flSt">${stOpts}</select></label>
+      <label class="field">Recherche<input id="flQ" type="search" placeholder="libellé, responsable, commentaire…" value="${esc(F.q)}"></label>
+      <span class="hint" style="margin-left:auto">${rows.length} ${plural(rows.length,'ligne','lignes')} · cliquez un libellé pour tout modifier</span>
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr>${th('title','Action')}${th('ch','Chantier')}${th('start','Début')}${th('end','Fin prévue')}${th('status','Situation')}${th('delay','Retard')}<th>Statut</th><th>Avancement</th>${th('owner','Responsable')}</tr></thead>
+      <tbody>${rows.map(({it, s}) => `
+        <tr class="${s.key}">
+          <td><button class="link t" data-edit="${it.id}" style="text-align:left">${esc(it.title)}</button>${it.crit === 'critique' ? ' <span class="critical" title="Chemin critique">◆</span>' : ''}<div class="sub">${it.type === 'jalon' ? 'Jalon' : 'Activité'}${it.comment ? ' · ' + esc(it.comment) : ''}</div></td>
+          <td><span class="ch-chip">${esc(chName(it.chantier))}</span></td>
+          <td class="num">${it.type === 'jalon' ? '' : fmt(it.start)}</td>
+          <td class="num">${fmt(it.end)}${it.status === 'done' && it.doneDate ? `<div class="sub">réel : ${fmt(it.doneDate)}</div>` : ''}</td>
+          <td><span class="badge ${s.key === 'done' && s.late ? 'donelate' : s.key}">${s.key === 'done' && s.late ? 'Terminé en retard' : KEY_LABEL[s.key]}</span></td>
+          <td class="num">${s.delay ? `<span class="delay">+${s.delay} j</span>` : '—'}</td>
+          <td><select data-status="${it.id}"><option value="todo" ${it.status === 'todo' ? 'selected' : ''}>À faire</option><option value="doing" ${it.status === 'doing' ? 'selected' : ''}>En cours</option><option value="done" ${it.status === 'done' ? 'selected' : ''}>Terminé</option></select></td>
+          <td>${it.type === 'activite' ? `<input type="number" min="0" max="100" step="5" data-prog="${it.id}" value="${it.status === 'done' ? 100 : (Number(it.progress) || 0)}" ${it.status === 'done' ? 'disabled' : ''}> %` : (it.status === 'done' ? '100 %' : '—')}</td>
+          <td>${esc(it.owner) || '<span class="sub">—</span>'}</td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  const P = $('#panel-list');
+  P.querySelector('#flCh').onchange = e => { F.ch = e.target.value; save(); renderList(); };
+  P.querySelector('#flSt').onchange = e => { F.st = e.target.value; save(); renderList(); };
+  P.querySelector('#flQ').oninput = e => { F.q = e.target.value; save(); renderList(); P.querySelector('#flQ').focus(); P.querySelector('#flQ').setSelectionRange(F.q.length, F.q.length); };
+  P.querySelectorAll('th[data-sort]').forEach(h => h.onclick = () => { if (F.sort === h.dataset.sort) F.dir *= -1; else { F.sort = h.dataset.sort; F.dir = 1; } save(); renderList(); });
+  P.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openEdit(b.dataset.edit));
+  P.querySelectorAll('[data-status]').forEach(sel => sel.onchange = () => quickStatus(sel.dataset.status, sel.value));
+  P.querySelectorAll('[data-prog]').forEach(inp => inp.onchange = () => quickProgress(inp.dataset.prog, inp.value));
+}
+
+function quickStatus(id, status){
+  const it = state.items.find(i => i.id === id); if (!it) return;
+  const prev = it.status;
+  it.status = status;
+  if (status === 'done'){ it.progress = 100; if (!it.doneDate) it.doneDate = ref(); }
+  if (status === 'todo'){ it.progress = 0; it.doneDate = ''; }
+  if (status === 'doing' && prev === 'done'){ it.doneDate = ''; if (it.progress === 100) it.progress = 50; }
+  it.updated = nowStamp();
+  addLog(`${it.title} : statut ${({todo:'À faire',doing:'En cours',done:'Terminé'})[prev]} → ${({todo:'À faire',doing:'En cours',done:'Terminé'})[status]}${status === 'done' ? ` (fin réelle ${fmt(it.doneDate)})` : ''}`);
+  save(); render(); toast(status === 'done' ? 'Action terminée' : 'Statut mis à jour');
+}
+function quickProgress(id, v){
+  const it = state.items.find(i => i.id === id); if (!it) return;
+  const p = Math.max(0, Math.min(100, Number(v) || 0));
+  if (p === (Number(it.progress) || 0) && it.status !== 'done') return;
+  addLog(`${it.title} : avancement ${it.progress}% → ${p}%`);
+  it.progress = p;
+  if (p === 100){ it.status = 'done'; if (!it.doneDate) it.doneDate = ref(); }
+  else if (p > 0 && it.status === 'todo') it.status = 'doing';
+  else if (it.status === 'done' && p < 100){ it.status = 'doing'; it.doneDate = ''; }
+  it.updated = nowStamp();
+  save(); render(); toast('Avancement mis à jour');
+}
+
+function renderProgress(){
+  const r = ref(), S = stats(), R = range();
+  const rows = CHANTIERS.map(ch => {
+    const its = state.items.filter(i => i.chantier === ch.id);
+    const ev = its.map(i => evalItem(i, r));
+    const n = its.length || 1;
+    const done = ev.filter(s => s.key === 'done').length;
+    const late = ev.filter(s => s.key === 'late').length;
+    const ongoing = ev.filter(s => ['ongoing','risk','today'].includes(s.key)).length;
+    const prog = Math.round(its.reduce((a, i) => a + (i.status === 'done' ? 100 : (i.type === 'jalon' ? 0 : Number(i.progress) || 0)), 0) / n);
+    const nextDue = its.filter(i => i.status !== 'done').sort((a, b) => a.end.localeCompare(b.end))[0];
+    return `<div class="prog-row"><div>${esc(ch.name)}<div class="meta">${done}/${its.length} terminées${late ? ` · <span class="delay">${late} en retard</span>` : ''}${nextDue ? ` · prochaine échéance : ${fmtShort(nextDue.end)}` : ''}</div></div>
+      <div class="track" title="vert = terminé, orange = en cours, rouge = en retard"><i class="d" style="width:${done / n * 100}%"></i><i class="o" style="width:${ongoing / n * 100}%"></i><i class="l" style="width:${late / n * 100}%"></i></div>
+      <div class="n">${prog}%</div></div>`;
+  }).join('');
+
+  // Courbe prévu vs réalisé (cumul d'actions terminées, %)
+  const W = 640, H = 240, pL = 36, pR = 12, pT = 14, pB = 30;
+  const n = state.items.length || 1;
+  const x = i => pL + i / (R.n - 1) * (W - pL - pR);
+  const y = v => pT + (1 - v / 100) * (H - pT - pB);
+  const planned = R.days.map(dd => state.items.filter(i => diffDays(dd, i.end) >= 0).length / n * 100);
+  const actual = R.days.map(dd => diffDays(dd, r) > 0 ? null : state.items.filter(i => i.status === 'done' && (i.doneDate || i.end) <= dd).length / n * 100);
+  const path = arr => arr.map((v, i) => v == null ? null : `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).filter(Boolean).join(' ');
+  const refIdx = R.days.indexOf(r);
+  const gap = refIdx >= 0 ? Math.round(planned[refIdx] - (actual[refIdx] || 0)) : 0;
+  const ticks = [0, 25, 50, 75, 100].map(v => `<line x1="${pL}" x2="${W - pR}" y1="${y(v)}" y2="${y(v)}" stroke="#E4E1DB"/><text x="${pL - 6}" y="${y(v) + 4}" font-size="10" text-anchor="end" fill="#777">${v}%</text>`).join('');
+  const xl = R.days.map((dd, i) => (fromISO(dd).getDay() === 1 || i === 0) ? `<text x="${x(i)}" y="${H - 10}" font-size="10" text-anchor="middle" fill="#777">${fmtShort(dd)}</text>` : '').join('');
+  const evl = state.events.map(e => { const i = R.days.indexOf(e.start); return i < 0 ? '' : `<line x1="${x(i)}" x2="${x(i)}" y1="${pT}" y2="${H - pB}" stroke="#7A2E3A" stroke-dasharray="3 3"/><text x="${x(i) + 3}" y="${pT + 10}" font-size="9" fill="#7A2E3A">${esc(e.name)}</text>`; }).join('');
+  const todayL = refIdx >= 0 ? `<line x1="${x(refIdx)}" x2="${x(refIdx)}" y1="${pT}" y2="${H - pB}" stroke="#E27A24" stroke-width="2"/>` : '';
+  const gapArea = refIdx >= 0 ? `<line x1="${x(refIdx)}" x2="${x(refIdx)}" y1="${y(planned[refIdx])}" y2="${y(actual[refIdx] || 0)}" stroke="#C8102E" stroke-width="6" stroke-linecap="round" opacity=".7"/>` : '';
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Courbe d'avancement prévu et réalisé">${ticks}${evl}
+    <path d="${path(planned)}" fill="none" stroke="#4C4C4C" stroke-width="2" stroke-dasharray="6 4"/>
+    <path d="${path(actual)}" fill="none" stroke="#E27A24" stroke-width="3" stroke-linejoin="round"/>
+    ${gapArea}${todayL}${xl}</svg>`;
+  $('#panel-progress').innerHTML = `<div class="prog-grid">
+    <div><h3 style="font-size:13px;margin-bottom:12px">Avancement par chantier</h3><div class="prog-list">${rows}</div></div>
+    <div class="chart-wrap"><h3>Courbe d'avancement : prévu vs réalisé</h3>${svg}
+      <div class="chart-legend"><span><i style="background:#4C4C4C"></i>Prévu (cumul des fins planifiées)</span><span><i style="background:#E27A24"></i>Réalisé (actions terminées)</span>${refIdx >= 0 ? `<span style="color:${gap > 0 ? 'var(--red)' : 'var(--green)'};font-weight:600">${gap > 0 ? `Écart : −${gap} pts` : 'Dans le plan'}</span>` : ''}</div></div>
+  </div>`;
+}
+
+function renderEvents(){
+  const r = ref();
+  $('#panel-events').innerHTML = `<p class="hint" style="margin:0 0 12px">Les événements structurent le planning : ils apparaissent en lignes verticales dans le rétro-planning et dans les compteurs J-x. Les actions dont l'échéance tombe le jour d'un événement y sont rattachées ci-dessous.</p>
+    <div class="focus">${state.events.map(e => {
+      const linked = state.items.filter(i => i.end >= e.start && i.end <= e.end).map(i => ({it: i, s: evalItem(i, r)}));
+      const nLate = linked.filter(x => x.s.key === 'late').length;
+      const dIn = diffDays(e.start, r);
+      return `<div class="col ${nLate ? 'red' : 'gray'}"><h3>${esc(e.name)}<span class="n">${dIn > 0 ? `J-${dIn}` : (diffDays(e.end, r) >= 0 ? 'en cours' : 'passé')}</span></h3>
+        <div style="padding:10px 12px;font-size:12.5px;color:var(--ink-2)">${fmtLong(e.start)}${e.end !== e.start ? ` → ${fmtLong(e.end)}` : ''}${nLate ? `<div class="delay" style="margin-top:4px">${nLate} ${plural(nLate,'prérequis en retard','prérequis en retard')}</div>` : ''}</div>
+        ${linked.length ? `<ul>${linked.map(itemLi).join('')}</ul>` : '<div class="empty">Aucune action rattachée à cette date.</div>'}</div>`;
+    }).join('')}</div>
+    <div style="margin-top:14px"><button class="btn" id="btnEvt">Modifier les dates des événements</button></div>`;
+  $('#panel-events').querySelectorAll('li[data-id]').forEach(li => li.addEventListener('click', () => openEdit(li.dataset.id)));
+  $('#btnEvt').onclick = openEvents;
+}
+
+function renderLog(){
+  $('#panel-log').innerHTML = state.log.length
+    ? `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="hint">${state.log.length} ${plural(state.log.length,'entrée','entrées')}, la plus récente en premier.</span><button class="btn ghost" id="clearLog">Vider le journal</button></div><ul class="log">${state.log.map(l => `<li><time>${esc(l.ts)}</time><span>${esc(l.text)}</span></li>`).join('')}</ul>`
+    : `<div class="col gray"><div class="empty">Le journal se remplit automatiquement à chaque changement de statut, d'avancement ou de date.</div></div>`;
+  const c = $('#clearLog'); if (c) c.onclick = async () => { if (await askConfirm('Vider le journal ?')) { state.log = []; save(); renderLog(); } };
+}
+
+/* Confirmation sans window.confirm (fonctionne aussi dans un cadre restreint) */
+function askConfirm(msg){
+  return new Promise(res => {
+    const dc = $('#dlgConfirm'); $('#confirmMsg').textContent = msg;
+    const done = v => { dc.close(); $('#confirmYes').onclick = $('#confirmNo').onclick = null; res(v); };
+    $('#confirmYes').onclick = () => done(true); $('#confirmNo').onclick = () => done(false);
+    dc.oncancel = e => { e.preventDefault(); done(false); };
+    dc.showModal(); $('#confirmNo').focus();
+  });
+}
+
+/* ============================================================
+   Édition
+   ============================================================ */
+let editingId = null;
+const dlg = $('#dlg');
+$('#fChantier').innerHTML = CHANTIERS.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+$('#fType').onchange = () => { const j = $('#fType').value === 'jalon'; $('#fEndWrap').style.display = j ? 'none' : ''; $('#fStartLab').textContent = j ? 'Date du jalon' : 'Début'; };
+$('#fStatus').onchange = () => { if ($('#fStatus').value === 'done'){ $('#fProgress').value = 100; if (!$('#fDoneDate').value) $('#fDoneDate').value = ref(); } };
+$('#fProgress').onchange = () => { if (Number($('#fProgress').value) >= 100){ $('#fStatus').value = 'done'; if (!$('#fDoneDate').value) $('#fDoneDate').value = ref(); } else if (Number($('#fProgress').value) > 0 && $('#fStatus').value === 'todo') $('#fStatus').value = 'doing'; };
+
+function openEdit(id){
+  editingId = id;
+  const it = id ? state.items.find(i => i.id === id) : null;
+  $('#dlgTitle').textContent = it ? 'Modifier l\'action' : 'Nouvelle action';
+  $('#dlgDelete').style.visibility = it ? 'visible' : 'hidden';
+  $('#fTitle').value = it ? it.title : '';
+  $('#fChantier').value = it ? it.chantier : CHANTIERS[0].id;
+  $('#fType').value = it ? it.type : 'jalon';
+  $('#fStart').value = it ? it.start : ref();
+  $('#fEnd').value = it ? it.end : ref();
+  $('#fOwner').value = it ? it.owner : '';
+  $('#fCrit').value = it ? it.crit : 'normal';
+  $('#fStatus').value = it ? it.status : 'todo';
+  $('#fProgress').value = it ? (it.status === 'done' ? 100 : it.progress) : 0;
+  $('#fDoneDate').value = it ? it.doneDate : '';
+  $('#fUpdated').value = it && it.updated ? it.updated : 'jamais';
+  $('#fComment').value = it ? it.comment : '';
+  $('#fType').onchange();
+  if (it){ const s = evalItem(it); $('#fComputed').innerHTML = `<span class="status-pill"><span class="badge ${s.key === 'done' && s.late ? 'donelate' : s.key}">${KEY_LABEL[s.key]}</span>${esc(s.label)}</span>`; }
+  else $('#fComputed').innerHTML = '';
+  dlg.showModal();
+  $('#fTitle').focus();
+}
+$('#dlgClose').onclick = $('#dlgCancel').onclick = () => dlg.close();
+$('#dlgSave').onclick = () => {
+  const title = $('#fTitle').value.trim();
+  if (!title){ $('#fTitle').focus(); toast('Indiquez un libellé'); return; }
+  const type = $('#fType').value;
+  const start = $('#fStart').value || ref();
+  let end = type === 'jalon' ? start : ($('#fEnd').value || start);
+  if (end < start) end = start;
+  let status = $('#fStatus').value;
+  let progress = Math.max(0, Math.min(100, Number($('#fProgress').value) || 0));
+  let doneDate = $('#fDoneDate').value;
+  if (status === 'done'){ progress = 100; if (!doneDate) doneDate = ref(); } else { doneDate = ''; if (progress === 100) progress = 95; }
+  const data = { title, chantier: $('#fChantier').value, type, start, end, owner: $('#fOwner').value.trim(), crit: $('#fCrit').value, status, progress, doneDate, comment: $('#fComment').value.trim(), updated: nowStamp() };
+  if (editingId){
+    const it = state.items.find(i => i.id === editingId);
+    const changes = [];
+    if (it.status !== data.status) changes.push(`statut → ${({todo:'À faire',doing:'En cours',done:'Terminé'})[data.status]}`);
+    if (it.progress !== data.progress && type === 'activite') changes.push(`avancement ${it.progress}% → ${data.progress}%`);
+    if (it.start !== data.start || it.end !== data.end) changes.push(`dates → ${fmtShort(data.start)}${data.end !== data.start ? ' – ' + fmtShort(data.end) : ''}`);
+    if (it.title !== data.title) changes.push('libellé modifié');
+    if (it.comment !== data.comment) changes.push('commentaire mis à jour');
+    if (it.owner !== data.owner) changes.push(`responsable : ${data.owner || '—'}`);
+    Object.assign(it, data);
+    addLog(`${it.title} : ${changes.length ? changes.join(', ') : 'modification'}`);
+  } else {
+    const id = 'i' + Date.now().toString(36);
+    state.items.push({ id, ...data });
+    addLog(`Nouvelle action ajoutée : ${title} (${chName(data.chantier)}, ${fmtShort(end)})`);
+  }
+  save(); dlg.close(); render(); toast('Enregistré');
+};
+$('#dlgDelete').onclick = async () => {
+  const it = state.items.find(i => i.id === editingId); if (!it) return;
+  dlg.close();
+  if (!await askConfirm(`Supprimer « ${it.title} » ? Cette action ne peut pas être annulée.`)) { dlg.showModal(); return; }
+  state.items = state.items.filter(i => i.id !== editingId);
+  addLog(`Action supprimée : ${it.title}`);
+  save(); dlg.close(); render(); toast('Action supprimée');
+};
+
+/* Événements */
+const dlgEvt = $('#dlgEvt');
+function openEvents(){
+  $('#evtBody').innerHTML = state.events.map((e, i) => `
+    <label class="field span2">Nom<input data-ev="${i}" data-k="name" type="text" value="${esc(e.name)}"></label>
+    <label class="field">Début<input data-ev="${i}" data-k="start" type="date" value="${e.start}"></label>
+    <label class="field">Fin<input data-ev="${i}" data-k="end" type="date" value="${e.end}"></label>`).join('<hr class="span2" style="border:none;border-top:1px solid var(--line);margin:4px 0">');
+  dlgEvt.showModal();
+}
+$('#evtClose').onclick = () => dlgEvt.close();
+$('#evtSave').onclick = () => {
+  $('#evtBody').querySelectorAll('[data-ev]').forEach(inp => { const e = state.events[Number(inp.dataset.ev)]; e[inp.dataset.k] = inp.value; });
+  state.events.forEach(e => { if (!e.start) e.start = ref(); if (!e.end || e.end < e.start) e.end = e.start; });
+  addLog('Dates des événements programme mises à jour');
+  save(); dlgEvt.close(); render(); toast('Événements enregistrés');
+};
+
+/* ============================================================
+   Contrôles globaux
+   ============================================================ */
+$('#refDate').onchange = e => { const v = e.target.value; state.settings.refDate = (v && v !== todayISO()) ? v : ''; save(); render(); };
+$('#btnToday').onclick = () => { state.settings.refDate = ''; save(); render(); };
+$('#showDone').onchange = e => { state.settings.showDone = e.target.checked; save(); renderGantt(); };
+$('#onlyLate').onchange = e => { state.settings.onlyLate = e.target.checked; save(); renderGantt(); };
+$('#zoom').oninput = e => { state.settings.zoom = Number(e.target.value); document.documentElement.style.setProperty('--day-w', state.settings.zoom + 'px'); };
+$('#zoom').onchange = () => save();
+$('#btnAdd').onclick = () => openEdit(null);
+$('#btnPrint').onclick = () => window.print();
+
+const yearSel = $('#yearSel');
+yearSel.innerHTML = [2025, 2026, 2027].map(y => `<option value="${y}">${y}</option>`).join('');
+yearSel.value = state.settings.year;
+yearSel.onchange = async () => {
+  const y = Number(yearSel.value), old = state.settings.year;
+  if (y === old) return;
+  if (!await askConfirm(`Décaler toutes les dates du plan de ${old} vers ${y} ?`)){ yearSel.value = old; return; }
+  const shift = s => s ? String(y) + s.slice(4) : s;
+  state.items.forEach(i => { i.start = shift(i.start); i.end = shift(i.end); i.doneDate = shift(i.doneDate); });
+  state.events.forEach(e => { e.start = shift(e.start); e.end = shift(e.end); });
+  if (state.settings.refDate) state.settings.refDate = shift(state.settings.refDate);
+  state.settings.year = y;
+  addLog(`Année du plan changée : ${old} → ${y}`);
+  save(); render(); toast(`Plan recalé sur ${y}`);
+};
+
+$('#btnExport').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `retroplanning_vague1_${todayISO()}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Export téléchargé');
+};
+$('#btnImport').onclick = () => $('#fileInput').click();
+$('#fileInput').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const data = JSON.parse(rd.result);
+      if (!Array.isArray(data.items)) throw new Error('format');
+      state = { ...freshState(), ...data };
+      state.log = state.log || []; state.settings = { ...freshState().settings, ...(data.settings || {}) };
+      addLog(`Suivi importé depuis ${f.name}`);
+      save(); yearSel.value = state.settings.year; render(); toast('Suivi importé');
+    } catch (err){ toast('Fichier non reconnu : exportez d\'abord depuis ce tableau de bord.'); }
+  };
+  rd.readAsText(f); e.target.value = '';
+};
+$('#btnReset').onclick = async () => {
+  if (!await askConfirm('Revenir au plan initial du slide ? Les statuts, commentaires et le journal seront effacés.')) return;
+  state = freshState(); save(); yearSel.value = state.settings.year; render(); toast('Plan réinitialisé');
+};
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t.dataset.tab));
+});
+
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
+
+// Rafraîchit à minuit pour que le passage au jour suivant se voie sans recharger
+setInterval(() => { if (!state.settings.refDate && $('#refDate').value !== todayISO()) render(); }, 60000);
+
+render();
+</script>
+</body>
+</html>
