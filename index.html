@@ -44,6 +44,21 @@ h1,h2,h3{margin:0;font-weight:600;line-height:1.2}
 .btn.ghost{border-color:transparent;color:var(--muted)}
 .btn.danger{color:var(--red);border-color:var(--red-soft);background:var(--red-soft)}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.menu{position:relative}
+.menu summary{list-style:none}
+.menu summary::-webkit-details-marker{display:none}
+.menu-list{position:absolute;left:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line-2);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.14);width:340px;max-width:92vw;padding:8px;z-index:30;display:flex;flex-direction:column;gap:2px}
+.menu-list button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:none;background:none;border-radius:8px;padding:9px 10px;font-size:13px}
+.menu-list button span{font-size:11.5px;color:var(--muted);font-weight:400;line-height:1.35}
+.menu-list button:hover{background:var(--bg)}
+.menu-list button.danger{color:var(--red)}
+.menu-list hr{border:none;border-top:1px solid var(--line);margin:4px 0}
+.menu-hint{font-size:11.5px;color:var(--ink-2);margin:4px 10px 8px;line-height:1.4}
+.save-state{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.save-state::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--gray-bar)}
+.save-state.ok::before{background:var(--green)}
+.save-state.off{color:var(--red)}
+.save-state.off::before{background:var(--red)}
 
 main{max-width:1600px;margin:0 auto;padding:18px 28px 60px;display:flex;flex-direction:column;gap:18px}
 
@@ -271,7 +286,7 @@ dialog::backdrop{background:rgba(30,30,30,.45)}
     <div class="brand">
       <div class="kicker">Programme CBS, vague 1</div>
       <h1>Trois semaines pour sécuriser le démarrage de la vague 1</h1>
-      <div class="sub" id="subTitle"></div>
+      <div class="sub"><span id="subTitle"></span> <span class="save-state" id="saveState"></span></div>
     </div>
     <div class="controls">
       <label class="field">Date de référence
@@ -282,10 +297,18 @@ dialog::backdrop{background:rgba(30,30,30,.45)}
         <select id="yearSel"></select>
       </label>
       <button class="btn primary" id="btnAdd">+ Ajouter une action</button>
-      <button class="btn" id="btnExport" title="Télécharger l'état du suivi (JSON)">Exporter</button>
-      <button class="btn" id="btnImport" title="Recharger un fichier JSON exporté">Importer</button>
-      <button class="btn ghost" id="btnPrint">Imprimer</button>
-      <button class="btn ghost" id="btnReset" title="Revenir au plan initial du slide">Réinitialiser</button>
+      <details class="menu" id="dataMenu">
+        <summary class="btn">Sauvegarde et données ▾</summary>
+        <div class="menu-list">
+          <p class="menu-hint">Le suivi est enregistré automatiquement. Pour le conserver au-delà d'une mise à jour du dashboard, le transférer ou le partager, utilisez l'une de ces options.</p>
+          <button id="btnSaveFile"><b>Enregistrer le fichier (HTML + suivi)</b><span>Télécharge ce dashboard avec vos données embarquées ; remplacez l'ancien fichier par celui-ci.</span></button>
+          <button id="btnExport"><b>Exporter le suivi (JSON)</b><span>Copie de sauvegarde légère, réimportable dans toute version du dashboard.</span></button>
+          <button id="btnImport"><b>Importer un suivi (JSON)</b><span>Recharge un export précédent.</span></button>
+          <button id="btnPrint"><b>Imprimer</b></button>
+          <hr>
+          <button id="btnReset" class="danger"><b>Réinitialiser le plan</b><span>Revient au plan initial du slide, efface les suivis.</span></button>
+        </div>
+      </details>
       <input type="file" id="fileInput" accept="application/json" class="sr">
     </div>
   </div>
@@ -377,12 +400,17 @@ dialog::backdrop{background:rgba(30,30,30,.45)}
 
 <div class="toast" id="toast"></div>
 
+<script type="application/json" id="embedded-state">null</script>
 <script>
 /* ============================================================
    Données initiales (extraites du slide "Comité Sponsor")
    ============================================================ */
 const DEFAULT_YEAR = 2026;
-const STORAGE_KEY = 'retroplanning_vague1_v1';
+const STORAGE_KEY = 'retroplanning_vague1';        // clé stable : ne change plus d'une version à l'autre
+const LEGACY_KEYS = ['retroplanning_vague1_v1'];     // anciennes clés à récupérer
+const PLAN_VERSION = 2;                              // à incrémenter à chaque évolution du plan initial ci-dessous
+// Copie du fichier tel qu'ouvert, avant tout rendu : sert à "Enregistrer le fichier (HTML + suivi)"
+const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
 const CHANTIERS = [
   {id:'res', name:'Ressources'},
@@ -469,26 +497,134 @@ const nowStamp = () => { const n = new Date(); return `${String(n.getDate()).pad
 const plural = (n, s, p) => n > 1 ? p : s;
 
 /* ============================================================
-   Stockage (tolérant : mémoire si le navigateur refuse)
+   Persistance à trois niveaux
+   1. Sauvegarde automatique : window.storage (stockage de l'application) ou localStorage (fichier ouvert dans un navigateur)
+   2. Données embarquées dans le fichier HTML lui-même ("Enregistrer le fichier")
+   3. Export / import JSON
+   À l'ouverture, la source la plus récente l'emporte ; si le plan a changé de version, les suivis sont fusionnés.
    ============================================================ */
 const store = {
-  ok: false,
-  get(){ try { const v = localStorage.getItem(STORAGE_KEY); this.ok = true; return v ? JSON.parse(v) : null; } catch(e){ this.ok = false; return null; } },
-  set(v){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); this.ok = true; } catch(e){ this.ok = false; } }
+  mode: 'memory', error: null, lastSaved: null,
+  async init(){
+    if (typeof window.storage === 'object' && window.storage && typeof window.storage.get === 'function'){ this.mode = 'artifact'; return; }
+    try { localStorage.setItem('__rp_test', '1'); localStorage.removeItem('__rp_test'); this.mode = 'local'; } catch(e){ this.mode = 'memory'; }
+  },
+  async load(){
+    try {
+      if (this.mode === 'artifact'){
+        try { const r = await window.storage.get(STORAGE_KEY, false); if (r && r.value) return JSON.parse(r.value); } catch(e){ /* clé absente */ }
+        return null;
+      }
+      if (this.mode === 'local'){
+        for (const k of [STORAGE_KEY, ...LEGACY_KEYS]){ const v = localStorage.getItem(k); if (v) return JSON.parse(v); }
+      }
+    } catch(e){ this.error = e; }
+    return null;
+  },
+  async save(data){
+    const payload = JSON.stringify(data);
+    try {
+      if (this.mode === 'artifact'){ const r = await window.storage.set(STORAGE_KEY, payload, false); if (!r) throw new Error('Échec de l\'enregistrement'); }
+      else if (this.mode === 'local'){ localStorage.setItem(STORAGE_KEY, payload); }
+      else throw new Error('Aucun stockage disponible');
+      this.error = null; this.lastSaved = new Date();
+    } catch(e){ this.error = e; }
+  },
+  saveSync(data){ if (this.mode === 'local'){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){} } }
 };
 
-let state = store.get() || freshState();
 function freshState(){
   return {
     items: JSON.parse(JSON.stringify(INITIAL_ITEMS)),
     events: JSON.parse(JSON.stringify(INITIAL_EVENTS)),
     settings: { year: DEFAULT_YEAR, refDate: '', showDone: true, onlyLate: false, zoom: 36 },
     log: [],
-    filters: { ch:'', st:'', q:'', sort:'end', dir:1 }
+    filters: { ch:'', st:'', q:'', sort:'end', dir:1 },
+    removedIds: [],
+    planVersion: PLAN_VERSION,
+    savedAt: 0
   };
 }
-state.filters = state.filters || { ch:'', st:'', q:'', sort:'end', dir:1 };
-function save(){ store.set(state); }
+let state = freshState();
+
+// Remet d'aplomb un état venant d'une ancienne version, d'un import ou du fichier
+function normalize(st){
+  const f = freshState();
+  if (!st || typeof st !== 'object' || !Array.isArray(st.items)) return null;
+  st.items = st.items.map(i => ({ owner:'', crit:'normal', status:'todo', progress:0, doneDate:'', comment:'', updated:'', ...i }));
+  st.events = Array.isArray(st.events) && st.events.length ? st.events : f.events;
+  st.settings = { ...f.settings, ...(st.settings || {}) };
+  st.log = Array.isArray(st.log) ? st.log : [];
+  st.filters = { ...f.filters, ...(st.filters || {}) };
+  st.removedIds = Array.isArray(st.removedIds) ? st.removedIds : [];
+  st.planVersion = Number(st.planVersion) || 1;
+  st.savedAt = Number(st.savedAt) || 0;
+  return st;
+}
+
+// Fusionne un plan initial plus récent avec les suivis existants :
+// - les actions suivies par l'utilisateur sont conservées telles quelles
+// - les actions jamais modifiées sont réalignées sur la nouvelle définition (libellé, dates, criticité)
+// - les nouvelles actions du plan sont ajoutées, sauf si l'utilisateur les avait supprimées
+function mergePlan(st){
+  const Y = String(st.settings.year);
+  const shift = d => d ? Y + d.slice(4) : d;
+  const byId = new Map(st.items.map(i => [i.id, i]));
+  let added = 0, realigned = 0;
+  for (const def of INITIAL_ITEMS){
+    const cur = byId.get(def.id);
+    if (!cur){ if (!st.removedIds.includes(def.id)){ st.items.push({ ...def, start: shift(def.start), end: shift(def.end) }); added++; } continue; }
+    if (!cur.updated && cur.status === 'todo' && !cur.comment){
+      const ns = shift(def.start), ne = shift(def.end);
+      if (cur.title !== def.title || cur.start !== ns || cur.end !== ne || cur.crit !== def.crit || cur.type !== def.type){ Object.assign(cur, { title: def.title, start: ns, end: ne, crit: def.crit, type: def.type, chantier: def.chantier }); realigned++; }
+    }
+  }
+  const evIds = new Set(st.events.map(e => e.id));
+  for (const ev of INITIAL_EVENTS) if (!evIds.has(ev.id)) st.events.push({ ...ev, start: shift(ev.start), end: shift(ev.end) });
+  const from = st.planVersion; st.planVersion = PLAN_VERSION;
+  const msg = `Plan mis à jour (v${from} → v${PLAN_VERSION}) : suivis conservés${added ? `, ${added} ${plural(added,'action ajoutée','actions ajoutées')}` : ''}${realigned ? `, ${realigned} ${plural(realigned,'action réalignée','actions réalignées')}` : ''}`;
+  addLog(msg);
+  return msg;
+}
+
+function readEmbedded(){
+  try { const el = document.getElementById('embedded-state'); const v = el ? JSON.parse(el.textContent) : null; return normalize(v); } catch(e){ return null; }
+}
+
+/* Sauvegarde automatique (anti-rebond) + indicateur */
+let saveTimer = null;
+function save(){
+  state.savedAt = Date.now(); state.planVersion = PLAN_VERSION;
+  setSaveState('saving');
+  clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 250);
+}
+async function flushSave(){
+  saveTimer = null;
+  await store.save(state);
+  setSaveState(store.error ? 'error' : 'saved');
+  renderNotice();
+}
+window.addEventListener('beforeunload', () => { if (saveTimer){ clearTimeout(saveTimer); store.saveSync(state); } });
+function setSaveState(k){
+  const el = document.getElementById('saveState'); if (!el) return;
+  const where = { artifact: 'stockage de l\'application', local: 'ce navigateur', memory: '' }[store.mode];
+  const t = store.lastSaved ? `${String(store.lastSaved.getHours()).padStart(2,'0')}:${String(store.lastSaved.getMinutes()).padStart(2,'0')}` : '';
+  if (store.mode === 'memory'){ el.className = 'save-state off'; el.textContent = 'Pas de sauvegarde automatique ici'; return; }
+  if (k === 'saving'){ el.className = 'save-state'; el.textContent = 'Enregistrement…'; }
+  else if (k === 'error'){ el.className = 'save-state off'; el.textContent = 'Sauvegarde impossible — exportez vos données'; }
+  else { el.className = 'save-state ok'; el.textContent = `Sauvegarde automatique (${where})${t ? ' · enregistré à ' + t : ''}`; }
+}
+
+/* Fichier HTML autonome : ce même tableau de bord avec le suivi embarqué */
+function downloadSelfContained(){
+  const json = JSON.stringify({ ...state, savedAt: Date.now() }).replace(/<\//g, '<\\/');
+  const html = TEMPLATE.replace(/<script type="application\/json" id="embedded-state">[\s\S]*?<\/script>/, `<script type="application/json" id="embedded-state">${json}<\/script>`);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'retroplanning_vague1.html'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Fichier enregistré avec le suivi : remplacez l\'ancien fichier par celui-ci');
+}
+
 function addLog(text){ state.log.unshift({ts: nowStamp(), text}); if(state.log.length > 300) state.log.length = 300; }
 
 /* ============================================================
@@ -569,7 +705,8 @@ function render(){
 function renderNotice(){
   const r = ref(), R = range();
   const msgs = [];
-  if (!store.ok) msgs.push('La sauvegarde automatique n\'est pas disponible dans cet environnement : utilisez Exporter / Importer pour conserver votre suivi.');
+  if (store.mode === 'memory') msgs.push('Pas de sauvegarde automatique dans cet environnement : utilisez « Enregistrer le fichier » ou « Exporter le suivi » (menu Sauvegarde et données) avant de fermer.');
+  else if (store.error) msgs.push('La dernière sauvegarde automatique a échoué : exportez votre suivi par sécurité.');
   const first = state.items.map(i => i.start).sort()[0], last = state.items.map(i => i.end).sort().pop();
   if (!state.settings.refDate && (diffDays(r, first) < -10 || diffDays(r, last) > 10))
     msgs.push(`La date du jour (${fmtLong(r)}) est hors de la période du plan (${fmtShort(first)} → ${fmtShort(last)}). Choisissez une date de référence pour simuler le suivi, ou ajustez l'année du plan.`);
@@ -978,6 +1115,7 @@ $('#dlgDelete').onclick = async () => {
   dlg.close();
   if (!await askConfirm(`Supprimer « ${it.title} » ? Cette action ne peut pas être annulée.`)) { dlg.showModal(); return; }
   state.items = state.items.filter(i => i.id !== editingId);
+  if (INITIAL_ITEMS.some(d => d.id === editingId) && !state.removedIds.includes(editingId)) state.removedIds.push(editingId);
   addLog(`Action supprimée : ${it.title}`);
   save(); dlg.close(); render(); toast('Action supprimée');
 };
@@ -1009,11 +1147,10 @@ $('#onlyLate').onchange = e => { state.settings.onlyLate = e.target.checked; sav
 $('#zoom').oninput = e => { state.settings.zoom = Number(e.target.value); document.documentElement.style.setProperty('--day-w', state.settings.zoom + 'px'); };
 $('#zoom').onchange = () => save();
 $('#btnAdd').onclick = () => openEdit(null);
-$('#btnPrint').onclick = () => window.print();
+$('#btnPrint').onclick = () => { closeMenu(); window.print(); };
 
 const yearSel = $('#yearSel');
 yearSel.innerHTML = [2025, 2026, 2027].map(y => `<option value="${y}">${y}</option>`).join('');
-yearSel.value = state.settings.year;
 yearSel.onchange = async () => {
   const y = Number(yearSel.value), old = state.settings.year;
   if (y === old) return;
@@ -1027,23 +1164,27 @@ yearSel.onchange = async () => {
   save(); render(); toast(`Plan recalé sur ${y}`);
 };
 
+const closeMenu = () => { const m = $('#dataMenu'); if (m) m.open = false; };
+document.addEventListener('click', e => { const m = $('#dataMenu'); if (m && m.open && !m.contains(e.target)) m.open = false; });
+$('#btnSaveFile').onclick = () => { closeMenu(); downloadSelfContained(); };
 $('#btnExport').onclick = () => {
+  closeMenu();
   const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = `retroplanning_vague1_${todayISO()}.json`; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   toast('Export téléchargé');
 };
-$('#btnImport').onclick = () => $('#fileInput').click();
+$('#btnImport').onclick = () => { closeMenu(); $('#fileInput').click(); };
 $('#fileInput').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   const rd = new FileReader();
   rd.onload = () => {
     try {
-      const data = JSON.parse(rd.result);
-      if (!Array.isArray(data.items)) throw new Error('format');
-      state = { ...freshState(), ...data };
-      state.log = state.log || []; state.settings = { ...freshState().settings, ...(data.settings || {}) };
+      const data = normalize(JSON.parse(rd.result));
+      if (!data) throw new Error('format');
+      state = data;
+      if (state.planVersion < PLAN_VERSION) mergePlan(state);
       addLog(`Suivi importé depuis ${f.name}`);
       save(); yearSel.value = state.settings.year; render(); toast('Suivi importé');
     } catch (err){ toast('Fichier non reconnu : exportez d\'abord depuis ce tableau de bord.'); }
@@ -1051,6 +1192,7 @@ $('#fileInput').onchange = e => {
   rd.readAsText(f); e.target.value = '';
 };
 $('#btnReset').onclick = async () => {
+  closeMenu();
   if (!await askConfirm('Revenir au plan initial du slide ? Les statuts, commentaires et le journal seront effacés.')) return;
   state = freshState(); save(); yearSel.value = state.settings.year; render(); toast('Plan réinitialisé');
 };
@@ -1066,7 +1208,27 @@ function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add
 // Rafraîchit à minuit pour que le passage au jour suivant se voie sans recharger
 setInterval(() => { if (!state.settings.refDate && $('#refDate').value !== todayISO()) render(); }, 60000);
 
-render();
+/* Démarrage : choisit la source la plus récente, fusionne si le plan a évolué */
+(async function boot(){
+  $('#banner').innerHTML = '<span class="light"></span><div class="headline">Chargement du suivi…</div>';
+  await store.init();
+  const saved = normalize(await store.load());
+  const emb = readEmbedded();
+  let chosen = null, fromFile = false;
+  if (saved && emb){ fromFile = emb.savedAt > saved.savedAt; chosen = fromFile ? emb : saved; }
+  else if (saved) chosen = saved;
+  else if (emb){ chosen = emb; fromFile = true; }
+  state = chosen || freshState();
+  const notes = [];
+  if (fromFile) notes.push('Suivi chargé depuis les données embarquées dans ce fichier.');
+  if (chosen && state.planVersion < PLAN_VERSION) notes.push(mergePlan(state));
+  yearSel.value = state.settings.year;
+  render();
+  setSaveState('idle');
+  if (fromFile || (chosen && notes.length)) save();          // propage vers la sauvegarde automatique
+  else if (!chosen) save();                                   // première ouverture : initialise la sauvegarde
+  if (notes.length) toast(notes.join(' '));
+})();
 </script>
 </body>
 </html>
