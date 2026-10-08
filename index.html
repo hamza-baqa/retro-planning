@@ -205,6 +205,9 @@ select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;backgroun
 #tip b{display:block;font-weight:600}
 #tip span{opacity:.75}
 
+.saved{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.saved:not(:empty)::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.saved.ok::before{background:var(--done)}.saved.pending::before{background:var(--accent)}.saved.err{color:var(--late)}.saved.err::before{background:var(--late)}
 .notes{color:var(--muted);font-size:13px;max-width:95ch;margin:0}
 .legend{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--c);vertical-align:-1px;margin-right:6px}
@@ -254,6 +257,8 @@ select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;backgroun
     <label class="zoom" id="zoomWrap">Zoom <input type="range" id="zoom" min="26" max="72" value="40"></label>
     <button class="btn" id="foldAll">Tout replier</button>
     <button class="btn" id="reset" disabled>Réinitialiser les filtres</button>
+    <button class="btn" id="resetAll">Tout effacer</button>
+    <span class="saved" id="saved" role="status" aria-live="polite"></span>
   </div>
   <div class="chips" id="chips" role="group" aria-label="Chantiers"></div>
 
@@ -276,7 +281,7 @@ select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;backgroun
     <span><i style="--c:var(--done)"></i>Fait</span>
     <span><i class="d" style="--c:var(--muted)"></i>Jalon / décision</span>
   </div>
-  <p class="notes">Cliquez sur une action pour l'ouvrir et la marquer comme faite (enregistré pour vos prochaines visites). Les dates du COPIL Go vague 1 (21/10), du kick-off (26–27/10) et du démarrage (28/10) sont reprises du visuel de référence, elles ne figurent pas dans le fichier de suivi. Les actions sans dates de début et de fin (RES-13 à RES-16) sont placées à leur échéance retenue.</p>
+  <p class="notes">Cliquez sur une action pour l'ouvrir et la marquer comme faite. Toutes vos modifications (actions faites, date de situation, filtres, vue, zoom, chantiers repliés) sont enregistrées automatiquement et retrouvées à la prochaine ouverture ; « Tout effacer » revient à l'état d'origine. Les dates du COPIL Go vague 1 (21/10), du kick-off (26–27/10) et du démarrage (28/10) sont reprises du visuel de référence, elles ne figurent pas dans le fichier de suivi. Les actions sans dates de début et de fin (RES-13 à RES-16) sont placées à leur échéance retenue.</p>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -305,10 +310,41 @@ const defT=realToday>=0&&realToday<N?realToday:2;
 
 const S={view:'gantt',T:defT,crit:'Toutes',q:'',porteur:'',chs:new Set(),status:null,collapsed:new Set(),done:{},sel:null};
 
-/* Persistance des actions faites */
-const store=typeof window.storage!=='undefined'?window.storage:null;
-async function loadDone(){if(!store)return;try{const r=await store.get('planning-v1-done',false);if(r&&r.value)S.done=JSON.parse(r.value)}catch(e){}}
-async function saveDone(){if(!store)return;try{await store.set('planning-v1-done',JSON.stringify(S.done),false)}catch(e){console.error(e)}}
+/* Persistance : chaque changement est enregistré automatiquement.
+   Dans Claude : window.storage. Fichier ouvert dans un navigateur : stockage local du navigateur. */
+const KEY='planning-v1-state';
+const hasCS=typeof window.storage!=='undefined';
+const DB={
+  async get(k){if(hasCS){try{const r=await window.storage.get(k,false);return r?r.value:null}catch(e){return null}}try{return localStorage.getItem(k)}catch(e){return null}},
+  async set(k,v){if(hasCS){try{return !!(await window.storage.set(k,v,false))}catch(e){return false}}try{localStorage.setItem(k,v);return true}catch(e){return false}},
+  async del(k){if(hasCS){try{await window.storage.delete(k,false)}catch(e){}return}try{localStorage.removeItem(k)}catch(e){}}
+};
+const snapshot=()=>JSON.stringify({v:1,done:S.done,view:S.view,T:S.T,crit:S.crit,q:S.q,porteur:S.porteur,chs:[...S.chs],status:S.status,collapsed:[...S.collapsed],zoom:+$('zoom').value,at:Date.now()});
+let saveTimer=null,lastSaved=null,restoredZoom=false;
+function setSaved(txt,cls){const el=$('saved');el.textContent=txt;el.className='saved '+(cls||'')}
+function scheduleSave(){
+  const snap=snapshot();if(snap.replace(/"at":\d+/,'')===lastSaved)return;
+  setSaved('Enregistrement…','pending');clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{const ok=await DB.set(KEY,snapshot());if(ok){lastSaved=snap.replace(/"at":\d+/,'');setSaved('Modifications enregistrées','ok')}else setSaved('Enregistrement impossible sur ce poste','err')},300)}
+async function loadState(){
+  let raw=await DB.get(KEY);
+  if(!raw){const old=await DB.get('planning-v1-done');if(old){try{S.done=JSON.parse(old)}catch(e){}}return}
+  try{const o=JSON.parse(raw);
+    S.done=o.done||{};S.view=o.view==='board'?'board':'gantt';
+    if(Number.isInteger(o.T)&&o.T>=0&&o.T<N)S.T=o.T;
+    S.crit=o.crit||'Toutes';S.q=o.q||'';S.porteur=PORTEURS.includes(o.porteur)?o.porteur:'';
+    S.chs=new Set((o.chs||[]).filter(c=>CHS.includes(c)));S.status=o.status||null;
+    S.collapsed=new Set((o.collapsed||[]).filter(c=>CHS.includes(c)));
+    if(o.zoom>=26&&o.zoom<=72){$('zoom').value=o.zoom;document.documentElement.style.setProperty('--dw',o.zoom+'px');restoredZoom=true}
+    $('q').value=S.q;$('porteur').value=S.porteur;
+    if(o.at)setSaved('Repris là où vous en étiez ('+new Date(o.at).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+')','ok');
+  }catch(e){}
+  lastSaved=snapshot().replace(/"at":\d+/,'')}
+async function resetAll(){
+  if(!confirm('Effacer toutes vos modifications (actions faites, filtres, affichage) ?'))return;
+  await DB.del(KEY);await DB.del('planning-v1-done');
+  S.done={};S.view='gantt';S.T=defT;S.crit='Toutes';S.q='';S.porteur='';S.chs.clear();S.status=null;S.collapsed.clear();
+  $('q').value='';$('porteur').value='';fitZoom();closePanel();update();setSaved('Tout a été réinitialisé','ok')}
 
 const status=r=>S.done[r.id]?'fait':r.e<S.T?'retard':r.s<=S.T?'cours':'venir';
 const friday=()=>S.T-((dt(S.T).getDay()+6)%7)+4;
@@ -332,7 +368,7 @@ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{S.view=b.data
 const slider=$('tslider');
 slider.oninput=e=>setT(+e.target.value);
 $('todayBtn').onclick=()=>setT(defT);
-$('zoom').oninput=e=>document.documentElement.style.setProperty('--dw',e.target.value+'px');
+$('zoom').oninput=e=>{document.documentElement.style.setProperty('--dw',e.target.value+'px');scheduleSave()};
 $('foldAll').onclick=()=>{if(S.collapsed.size)S.collapsed.clear();else CHS.forEach(c=>S.collapsed.add(c));update()};
 $('reset').onclick=()=>{S.crit='Toutes';S.q='';S.porteur='';S.chs.clear();S.status=null;$('q').value='';$('porteur').value='';update()};
 function setT(t){t=Math.max(0,Math.min(N-1,t));if(t===S.T)return;S.T=t;update()}
@@ -428,12 +464,13 @@ function openPanel(id){
   </div>`;
   $('panel').classList.add('open');$('panel').setAttribute('aria-hidden','false');$('scrim').classList.add('open');
   $('px').onclick=closePanel;
-  $('doneBtn').onclick=()=>{if(S.done[id])delete S.done[id];else S.done[id]=1;saveDone();update();openPanel(id)};
+  $('doneBtn').onclick=()=>{if(S.done[id])delete S.done[id];else S.done[id]=1;update();openPanel(id)};
   document.querySelectorAll('.a.sel').forEach(e=>e.classList.remove('sel'));
   const b=document.querySelector(`.al[data-open="${id}"]`);if(b)b.closest('.a').classList.add('sel');
 }
 function closePanel(){S.sel=null;$('panel').classList.remove('open');$('panel').setAttribute('aria-hidden','true');$('scrim').classList.remove('open');document.querySelectorAll('.a.sel').forEach(e=>e.classList.remove('sel'))}
 $('scrim').onclick=closePanel;
+$('resetAll').onclick=resetAll;
 
 /* Délégation : ouverture, repli, infobulle */
 document.addEventListener('click',e=>{
@@ -463,9 +500,11 @@ function update(){
   const rows=visible();
   if(S.view==='gantt')renderGantt(rows,first);else renderBoard(rows);
   first=false;
+  scheduleSave();
 }
-(()=>{const w=$('gscroll').clientWidth-parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lw'))-2;const dw=Math.max(34,Math.min(72,Math.floor(w/N)));document.documentElement.style.setProperty('--dw',dw+'px');$('zoom').value=dw})();
-loadDone().finally(update);
+function fitZoom(){if(!$('gscroll').clientWidth)return;const w=$('gscroll').clientWidth-parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lw'))-2;const dw=Math.max(34,Math.min(72,Math.floor(w/N)));document.documentElement.style.setProperty('--dw',dw+'px');$('zoom').value=dw}
+fitZoom();
+loadState().finally(()=>{update();if(!restoredZoom)fitZoom()});
 </script>
 </body>
 </html>
