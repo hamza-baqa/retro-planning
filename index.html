@@ -1,1325 +1,471 @@
-<!DOCTYPE html>
-<html lang="fr" data-theme="light">
+<!doctype html>
+<html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CBS One · Pilotage budgétaire</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planning démarrage vague 1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
 <style>
 :root{
-  --bg:#F4F2EE;
-  --surface:#FFFFFF;
-  --surface-2:#F9F7F4;
-  --chip:#EFECE8;
-  --ink:#1E1B17;
-  --ink-2:#4A443D;
-  --muted:#7B746A;
-  --line:#E7E1D9;
-  --line-2:#D8D0C5;
-  --orange:#EC6511;
-  --orange-hover:#D35607;
-  --orange-soft:#FCEBDD;
-  --red:#C2391F;
-  --red-soft:#FBE9E4;
-  --amber:#AA7006;
-  --amber-soft:#F8EED6;
-  --green:#2D7A4C;
-  --green-soft:#E3F0E7;
-  --bar-eng:#3E3832;
-  --bar-raf:#CDC4B8;
-  --shadow:0 1px 2px rgba(70,45,20,.04),0 10px 30px -18px rgba(70,45,20,.18);
-  --focus:0 0 0 3px rgba(236,101,17,.38);
-  --r-lg:18px; --r-md:12px;
-  --topbar:76px;
-  --gutter:32px;
-  --font:"Nunito Sans","Avenir Next","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  --bg:#fbfaf8;--surface:#fff;--fg:#2b2622;--muted:#776d65;--line:#e7e1da;--we:#f5f1eb;--hover:#fdf5ec;
+  --accent:#e07a1f;--accent-strong:#a8530b;--accent-soft:#fde9d3;--on-accent:#fff;
+  --bar:#57504a;--late:#b3261e;--late-soft:#fbe4e1;--done:#3f7d55;--done-soft:#e3f0e7;--now:#1f6f8b;--now-soft:rgba(31,111,139,.08);
+  --display:"Poppins","Segoe UI",Helvetica,Arial,sans-serif;--body:"Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;
+  --lw:380px;--dw:40px;--N:26;
   color-scheme:light;
 }
-[data-theme="dark"]{
-  --bg:#161412; --surface:#201D1A; --surface-2:#282420; --chip:#2F2A26;
-  --ink:#F3EFE9; --ink-2:#D3CBC1; --muted:#9C9389; --line:#35302B; --line-2:#4A433C;
-  --orange:#F27427; --orange-hover:#FF8B42; --orange-soft:rgba(242,116,39,.16);
-  --red:#F27C64; --red-soft:rgba(242,124,100,.15);
-  --amber:#E7B14C; --amber-soft:rgba(231,177,76,.15);
-  --green:#6DC290; --green-soft:rgba(109,194,144,.14);
-  --bar-eng:#DCD4C9; --bar-raf:#5B534B;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -18px rgba(0,0,0,.6);
-  color-scheme:dark;
-}
-@media (max-width:640px){:root{--gutter:16px;--topbar:64px}}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#191614;--surface:#211d1a;--fg:#efe9e3;--muted:#a59a90;--line:#38322d;--we:#26221f;--hover:#2a241f;
+  --accent:#e58a35;--accent-strong:#f0a258;--accent-soft:#4a2f16;--on-accent:#1b1208;
+  --bar:#a39a91;--late:#ef7468;--late-soft:#43211d;--done:#7fc195;--done-soft:#1f3326;--now:#5db4d1;--now-soft:rgba(93,180,209,.1);
+  color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 var(--body);padding:24px 20px 48px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--now);outline-offset:2px}
+.wrap{max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 
-*,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--font);-webkit-font-smoothing:antialiased;transition:background-color .25s,color .25s}
-a{color:inherit}
-button{font:inherit;color:inherit}
-h1,h2,h3{text-wrap:balance}
-:focus-visible{outline:none;box-shadow:var(--focus);border-radius:8px}
-.num{font-variant-numeric:tabular-nums lining-nums}
-.wrap{max-width:1440px;margin:0 auto;padding:0 var(--gutter)}
-.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
-.tone-red{color:var(--red)} .tone-amber{color:var(--amber)} .tone-green{color:var(--green)} .tone-muted{color:var(--muted)}
-.unit{font-size:.52em;font-weight:600;letter-spacing:.03em;margin-left:.22em;text-transform:uppercase;opacity:.85}
+/* En-tête */
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px 40px}
+h1{font:700 28px/1.15 var(--display);margin:0 0 4px;text-wrap:balance}
+.sub{margin:0;color:var(--muted)}
+.count{display:flex;gap:10px;flex-wrap:wrap}
+.cd{display:flex;align-items:baseline;gap:8px;padding:8px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.cd b{font:700 24px/1 var(--display);font-variant-numeric:tabular-nums}
+.cd span{color:var(--muted);font-size:13px;line-height:1.2}
+.cd.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.cd.go span{color:inherit;opacity:.9}
 
-/* ---------- Barre supérieure ---------- */
-.topbar{position:sticky;top:0;z-index:40;height:var(--topbar);background:var(--surface);border-bottom:1px solid var(--line)}
-.topbar .wrap{height:100%;display:flex;align-items:center;gap:24px}
-.brand{display:flex;align-items:center;gap:20px;text-decoration:none;min-width:0}
-.brand-logo{display:flex;flex-direction:column;align-items:flex-end;color:var(--orange);font-weight:800;font-size:12px;line-height:1;letter-spacing:.04em;text-transform:uppercase}
-.brand-logo img{height:40px;width:auto;display:block}
-.brand-sep{width:1px;height:38px;background:var(--line-2)}
-.brand-app{min-width:0}
-.brand-app strong{display:block;font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
-.brand-app span{display:block;font-size:15px;color:var(--muted);white-space:nowrap}
-.topnav{display:flex;gap:2px;margin-left:auto}
-.topnav a{padding:9px 15px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14.5px;color:var(--ink-2);transition:background .15s,color .15s}
-.topnav a:hover{background:var(--surface-2);color:var(--ink)}
-.topnav a[aria-current="page"]{background:var(--orange-soft);color:var(--orange-hover)}
-[data-theme="dark"] .topnav a[aria-current="page"]{color:var(--orange)}
-.theme-btn{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;transition:border-color .15s}
-.theme-btn:hover{border-color:var(--line-2)}
-@media (max-width:1080px){.topnav{display:none}.theme-btn{margin-left:auto}}
-@media (max-width:640px){.brand{gap:12px}.brand-logo{font-size:10px}.brand-app strong{font-size:17px}.brand-app span{font-size:13px}.theme-btn{width:42px;height:42px}}
+/* Curseur de situation */
+.situ{display:grid;grid-template-columns:auto 1fr auto;gap:8px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.situ label{font:600 14px var(--display)}
+.situ output{font:600 14px var(--display);color:var(--now);font-variant-numeric:tabular-nums;min-width:120px;display:inline-block}
+.situ input[type=range]{width:100%;accent-color:var(--now)}
+.situ .hint{grid-column:1/-1;color:var(--muted);font-size:13px;margin:0}
+.btn{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:8px;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn[disabled]{opacity:.45;cursor:default}
 
-/* ---------- Mise en page ---------- */
-.page{padding-top:22px;padding-bottom:72px}
-.eyebrow{margin:0;font-size:13px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
-.h1{margin:12px 0 0;font-size:clamp(30px,3.3vw,46px);line-height:1.08;font-weight:800;letter-spacing:-.022em}
-.lead{margin:16px 0 0;max-width:72ch;font-size:clamp(16px,1.25vw,19px);color:var(--ink-2);line-height:1.62}
-.block-title{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:60px 0 18px}
-.link-quiet{font-size:14.5px;font-weight:700;color:var(--orange-hover);text-decoration:none}
-[data-theme="dark"] .link-quiet{color:var(--orange)}
-.link-quiet:hover{text-decoration:underline;text-underline-offset:3px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+/* Indicateurs de statut (filtres) */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;transition:border-color .15s,background .15s}
+.kpi i{grid-row:span 2;width:12px;height:12px;border-radius:3px;background:var(--c)}
+.kpi b{font:700 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi:hover{border-color:var(--c)}
+.kpi[aria-pressed=true]{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));box-shadow:inset 0 0 0 1px var(--c)}
 
-/* ---------- Bandeau d'indicateurs ---------- */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow)}
-.kpi{background:var(--surface);padding:30px 34px 28px}
-.kpi-label{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-.kpi-value{margin-top:8px;font-size:clamp(30px,2.6vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
-.kpi-sub{margin-top:8px;font-size:15px;color:var(--muted)}
-@media (max-width:640px){.kpi{padding:20px 20px 18px}}
+/* Barre d'outils */
+.tools{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:2px;background:var(--surface)}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:7px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.search{position:relative}
+.search input{padding:7px 34px 7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);width:260px;max-width:100%}
+.search kbd{position:absolute;right:8px;top:50%;transform:translateY(-50%);font:12px var(--body);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);max-width:220px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-weight:600;font-size:13.5px;display:inline-flex;gap:6px;align-items:center}
+.chip small{font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip[aria-pressed=true] small{color:inherit;opacity:.85}
+.sp{flex:1}
+.zoom{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.zoom input{width:110px;accent-color:var(--accent)}
 
-/* ---------- Cartes d'instance ---------- */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,370px),1fr));gap:28px}
-.icard{--status:var(--red);container-type:inline-size;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--status);border-radius:var(--r-lg);padding:34px 38px 30px;box-shadow:var(--shadow)}
-.icard.ok{--status:var(--green)}
-.icard h3{margin:0;font-size:clamp(21px,1.75vw,26px);font-weight:800;letter-spacing:-.012em;line-height:1.25}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 15px;border-radius:999px;background:var(--chip);font-size:15px;color:var(--muted);white-space:nowrap}
-.icard .label{margin-top:30px}
-.icard .edition{margin:6px 0 0;font-size:clamp(18px,1.4vw,21px);font-weight:800}
-.badge{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;background:var(--red-soft);color:var(--red);font-weight:800;font-size:15.5px;white-space:nowrap}
-.badge::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
-.badge.ok{background:var(--green-soft);color:var(--green)}
-.icard .badge{margin-top:18px;align-self:flex-start}
-.icard .summary{margin:30px 0 0;color:var(--ink-2);font-size:16.5px;line-height:1.66;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:calc(1.66em * 3)}
-.minis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:30px}
-.mini{display:flex;flex-direction:column;justify-content:space-between;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px 12px;min-width:0}
-.mini-label{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mini-value{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:2px;font-size:23px;font-weight:800;line-height:1.15;white-space:nowrap}
-.mini-value .unit{margin-left:.2em}
-.icard .actions{margin-top:auto;padding-top:28px}
-.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:17px 20px;border:0;border-radius:var(--r-md);background:var(--orange);color:#fff;font-weight:800;font-size:18px;text-decoration:none;cursor:pointer;transition:background .15s}
-.btn-primary:hover{background:var(--orange-hover)}
-.btn-primary .arrow{display:inline-block;transition:transform .2s}
-.btn-primary:hover .arrow{transform:translateX(4px)}
-.prev-eds{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:26px;padding-top:20px;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}
-.pill-link{padding:6px 14px;border:1px solid var(--line-2);border-radius:999px;text-decoration:none;color:var(--ink-2);font-variant-numeric:tabular-nums;transition:border-color .15s,color .15s}
-.pill-link:hover{border-color:var(--orange);color:var(--orange)}
-@container (max-width:520px){.minis{gap:10px}.mini{padding:12px 12px 10px}.mini-label{white-space:normal;font-size:11.5px;letter-spacing:.06em;line-height:1.25}.mini-value{font-size:20px}}
-@media (max-width:640px){.icard{padding:26px 20px 22px}.minis{gap:8px}.mini{padding:11px 10px 10px}}
+/* Gantt */
+.gscroll{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-height:max(520px,calc(100vh - 140px));position:relative;overscroll-behavior:contain}
+.grid{position:relative;width:max-content;min-width:100%}
+.r{display:grid;grid-template-columns:var(--lw) calc(var(--dw)*var(--N));min-height:36px}
+.lc{position:sticky;left:0;z-index:3;background:var(--surface);border-right:1px solid var(--line)}
+.tc{position:relative;background:linear-gradient(90deg,transparent calc(var(--dw)*5),var(--we) calc(var(--dw)*5));background-size:calc(var(--dw)*7) 100%}
 
-/* ---------- Tableaux ---------- */
-.tbl-wrap{position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.tbl{width:100%;border-collapse:collapse;font-size:15px}
-.tbl th{padding:14px 16px;text-align:left;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
-.tbl td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
-.tbl tbody tr:last-child td{border-bottom:0}
-.tbl .r{text-align:right}
-.tbl td.r{font-variant-numeric:tabular-nums;white-space:nowrap}
-.tbl tbody tr.clickable{cursor:pointer}
-.tbl tbody tr.clickable:hover td,.tbl tbody tr.clickable:focus-visible td{background:var(--surface-2)}
-.tbl tbody tr.clickable:focus-visible{outline:none;box-shadow:inset 3px 0 0 var(--orange)}
-.tbl tfoot td{font-weight:800;border-top:2px solid var(--line-2);background:var(--surface-2);font-variant-numeric:tabular-nums}
-.tbl tfoot td:first-child{border-bottom-left-radius:var(--r-lg)}
-.tbl tfoot td:last-child{border-bottom-right-radius:var(--r-lg)}
-.sort-btn{border:0;background:none;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.sort-btn:hover{color:var(--ink)}
-.sort-btn .ind{opacity:0;font-size:10px}
-.sort-btn[data-dir] .ind{opacity:1;color:var(--orange)}
-.env-name{font-weight:800;display:block}
-.env-owner{display:block;font-size:13.5px;color:var(--muted)}
-.cell-strong{font-weight:800}
+.hd{background:var(--surface);border-bottom:1px solid var(--line)}
+#hd{position:sticky;top:0;z-index:6}
+.hd .lc{z-index:7;display:flex;align-items:flex-end;padding:10px 14px;color:var(--muted);font-size:13px}
+.hd .tc{background:none;user-select:none;touch-action:none;cursor:ew-resize}
+.wks{display:grid;grid-template-columns:repeat(4,calc(var(--dw)*7)) calc(var(--dw)*5);height:26px}
+.wks span{font:600 13px/26px var(--display);padding-left:6px;border-left:2px solid var(--fg);white-space:nowrap;overflow:hidden}
+.days{display:grid;grid-template-columns:repeat(var(--N),var(--dw));height:36px}
+.day{display:flex;flex-direction:column;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;line-height:1.1;border-radius:6px;margin:2px}
+.day em{font-style:normal;font-size:10.5px;color:var(--muted)}
+.day b{font-size:13px;font-weight:600}
+.day.we{opacity:.5}
+.day:hover{background:var(--now-soft)}
+.day.now{background:var(--now);color:#fff;opacity:1}
+.day.now em{color:inherit;opacity:.85}
+.evs{position:relative;height:48px}
+.flag{position:absolute;top:4px;transform:translateX(-50%);white-space:nowrap;font:600 11.5px/18px var(--display);padding:0 8px;border-radius:999px;background:var(--fg);color:var(--bg)}
+.flag.go{background:var(--accent);color:var(--on-accent);top:26px}
 
-/* Barre de consommation */
-.cbar{position:relative;height:12px;min-width:150px}
-.cbar .track{position:absolute;inset:0;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
-.cbar .track span{position:absolute;top:0;bottom:0}
-.cbar .eng{left:0;background:var(--bar-eng)}
-.cbar .raf{background:var(--bar-raf)}
-.cbar .over{background:repeating-linear-gradient(135deg,var(--red) 0 3px,transparent 3px 6px);opacity:.95}
-.cbar .mark{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;background:var(--ink);border-radius:2px}
-.cbar-wrap{display:flex;align-items:center;gap:12px}
-.cbar-wrap .pct{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:40px;text-align:right}
-.legend{display:flex;gap:10px 22px;flex-wrap:wrap;font-size:14px;color:var(--ink-2)}
-.legend span{display:inline-flex;align-items:center;gap:8px}
-.legend i{display:inline-block;width:14px;height:10px;border-radius:3px}
-.legend i.l-eng{background:var(--bar-eng)} .legend i.l-raf{background:var(--bar-raf)}
-.legend i.l-over{background:repeating-linear-gradient(135deg,var(--red) 0 3px,transparent 3px 6px);border:1px solid var(--red)}
-.legend i.l-mark{width:2px;height:16px;background:var(--ink)}
-.legend i.l-line{width:20px;height:3px;background:var(--orange)}
-.legend i.l-dash{width:20px;height:0;border-top:2px dashed var(--ink-2);border-radius:0}
+.g{background:var(--accent);color:var(--on-accent);min-height:40px}
+.g .lc{background:var(--accent);border-right-color:transparent}
+.g .tc{background:none}
+.gl{width:100%;border:0;background:none;text-align:left;display:grid;grid-template-columns:18px 1fr auto;gap:2px 8px;align-items:center;padding:6px 14px;color:inherit}
+.gl .chev{transition:transform .2s;font-size:12px}
+.gl[aria-expanded=false] .chev{transform:rotate(-90deg)}
+.gl strong{font:600 15px var(--display)}
+.gl small{font-size:12.5px;opacity:.92;font-variant-numeric:tabular-nums}
+.prog{grid-column:2/-1;height:4px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden;display:flex}
+.prog i{height:100%;background:#fff;transition:width .3s}
+.prog i.l{background:#5a0d08;opacity:.7}
+.env{position:absolute;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:rgba(255,255,255,.55)}
 
-/* ---------- Tableau de bord ---------- */
-.crumbs{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.crumbs a{text-decoration:none;transition:color .15s}
-.crumbs a:hover{color:var(--orange)}
-.crumbs .sep{opacity:.45}
-.dash-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px 32px;flex-wrap:wrap}
-.edition-line{display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap;margin-top:16px}
-.edition-line .when{font-size:clamp(18px,1.5vw,21px);font-weight:800}
-.switcher{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.switcher-label{font-size:14px;color:var(--muted);margin-right:4px}
-.seg{display:inline-flex;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;gap:2px}
-.seg a,.seg button{padding:8px 15px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14.5px;color:var(--ink-2);border:0;background:none;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;transition:background .15s,color .15s}
-.seg a:hover,.seg button:hover{background:var(--surface-2)}
-.seg [aria-current="page"],.seg [aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-.seg [aria-current="page"]:hover,.seg [aria-pressed="true"]:hover{background:var(--ink)}
-.icon-btn{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;text-decoration:none;color:var(--ink);transition:border-color .15s}
-.icon-btn:hover{border-color:var(--line-2)}
-.icon-btn[aria-disabled="true"]{opacity:.35;pointer-events:none}
-.btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:10px 17px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);font-weight:700;font-size:14.5px;cursor:pointer;text-decoration:none;transition:border-color .15s}
-.btn-ghost:hover{border-color:var(--ink-2)}
+.sb{min-height:24px;background:var(--accent-soft)}
+.sb .lc{background:var(--accent-soft);padding:3px 14px 3px 40px;font-size:12.5px;font-weight:700;color:var(--accent-strong);letter-spacing:.01em}
+.sb .tc{background:none}
 
-.dash-kpis{margin-top:30px}
-.subnav{position:sticky;top:var(--topbar);z-index:30;margin:30px calc(-1 * var(--gutter)) 0;padding:0 var(--gutter);background:var(--bg);border-bottom:1px solid var(--line)}
-@supports (backdrop-filter:blur(8px)){.subnav{background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.2) blur(12px)}}
-.subnav-inner{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-.subnav-inner::-webkit-scrollbar{display:none}
-.subnav button{flex:none;display:flex;gap:8px;align-items:center;padding:15px 12px 12px;border:0;border-bottom:3px solid transparent;background:none;font-weight:700;font-size:15px;color:var(--muted);cursor:pointer;transition:color .15s,border-color .2s}
-.subnav button:hover{color:var(--ink)}
-.subnav button.active{color:var(--ink);border-bottom-color:var(--orange)}
-.subnav .count{font-size:12px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--red-soft);color:var(--red)}
-.dsec{margin-top:40px;scroll-margin-top:calc(var(--topbar) + 70px)}
-.dsec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 20px;flex-wrap:wrap;margin-bottom:16px}
-.dsec-head h2{margin:0;font-size:clamp(21px,1.8vw,25px);font-weight:800;letter-spacing:-.012em}
-.dsec-head p{margin:4px 0 0;color:var(--muted);font-size:15px;max-width:70ch}
-.pad{padding:28px 32px}
-@media (max-width:640px){.pad{padding:20px 18px}}
+.a{border-top:1px solid var(--line)}
+.a:hover .lc,.a.sel .lc{background:var(--hover)}
+.a.sel .lc{box-shadow:inset 3px 0 0 var(--accent)}
+.al{width:100%;border:0;background:none;text-align:left;display:grid;grid-template-columns:66px 1fr;gap:1px 8px;padding:6px 14px;min-width:0}
+.al .id{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px}
+.al .tx{min-width:0;font-size:14px}
+.al .meta{grid-column:2;font-size:12.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.crit{display:inline-flex;align-items:center;gap:4px}
+.crit::before{content:"";width:8px;height:8px;border-radius:50%;border:1.5px solid var(--accent-strong)}
+.crit.Haute::before{background:var(--accent-strong)}
+.crit.Moyenne::before{background:linear-gradient(90deg,var(--accent-strong) 50%,transparent 50%)}
+.tick{color:var(--done);font-weight:700}
 
-/* Synthèse */
-.synth{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr)}
-.synth-main{padding:34px 38px}
-.synth-text{margin:0;font-size:clamp(18px,1.45vw,21px);line-height:1.55;font-weight:600;max-width:62ch}
-.msgs{list-style:none;margin:26px 0 0;padding:22px 0 0;border-top:1px solid var(--line);display:grid;gap:14px;max-width:70ch}
-.msgs li{display:grid;grid-template-columns:auto 1fr;gap:14px;color:var(--ink-2);line-height:1.55}
-.msgs li::before{content:"";width:7px;height:7px;border-radius:50%;margin-top:.62em;background:var(--orange)}
-.synth-side{border-left:1px solid var(--line);padding:30px 32px;background:var(--surface-2);display:grid;gap:22px;align-content:start;border-radius:0 var(--r-lg) var(--r-lg) 0}
-.stat-label{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-.stat-value{margin-top:2px;font-size:24px;font-weight:800;line-height:1.2}
-.stat-sub{font-size:14px;color:var(--muted)}
-.link-btn{border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit;text-align:left;text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:4px;text-decoration-thickness:2px;transition:text-decoration-color .15s}
-.link-btn:hover{text-decoration-color:var(--orange)}
-@media (max-width:900px){.synth{grid-template-columns:1fr}.synth-side{border-left:0;border-top:1px solid var(--line);border-radius:0 0 var(--r-lg) var(--r-lg);grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.synth-main{padding:24px 20px}}
+.bar,.dia{position:absolute;top:50%;border:0;padding:0;z-index:2}
+.bar{height:20px;margin-top:-10px;border-radius:5px;background:var(--sc);color:#fff;font:600 11.5px/20px var(--body);padding:0 8px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .25s,filter .15s}
+.bar.clip{border-radius:5px 0 0 5px;clip-path:polygon(0 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,0 100%)}
+.bar:hover,.dia:hover{filter:brightness(1.12)}
+.dia{width:14px;height:14px;margin:-7px 0 0 -7px;background:var(--sc);transform:rotate(45deg);border-radius:2px;transition:background .25s}
+.dia:hover{transform:rotate(45deg) scale(1.25)}
+.lbl{position:absolute;top:50%;transform:translateY(-50%);font-size:12.5px;white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums;pointer-events:none}
+.st-venir{--sc:var(--bar)} .st-cours{--sc:var(--accent)} .st-retard{--sc:var(--late)} .st-fait{--sc:var(--done)}
+.st-fait .bar{background:repeating-linear-gradient(135deg,var(--done) 0 6px,color-mix(in srgb,var(--done) 78%,#fff) 6px 12px)}
+.st-fait .al .tx{color:var(--muted)}
+.st-retard .al .id{color:var(--late);font-weight:700}
 
-/* Graphique de trajectoire */
-.chart{position:relative;margin-top:8px}
-.chart svg{display:block;overflow:visible}
-.chart .gridline{stroke:var(--line);stroke-width:1}
-.chart .axis{fill:var(--muted);font-size:12.5px;font-family:var(--font);font-variant-numeric:tabular-nums}
-.chart .env-line{stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:6 5}
-.chart .env-label{fill:var(--ink-2);font-size:12.5px;font-weight:700;font-family:var(--font)}
-.chart .area{fill:var(--red);opacity:.12}
-.chart .line{fill:none;stroke:var(--orange);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
-.chart .dot{fill:var(--surface);stroke:var(--orange);stroke-width:2.5}
-.chart .dot.last{fill:var(--orange)}
-.chart .hit{fill:transparent;cursor:pointer}
-.chart .hit:focus{outline:none}
-.chart .hit:focus-visible + .dot,.chart .pt:hover .dot{stroke-width:4}
-.chart .val{fill:var(--ink);font-size:13px;font-weight:800;font-family:var(--font)}
-.draw{animation:draw 1.1s cubic-bezier(.4,0,.2,1) both}
-@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
-.tip{position:absolute;z-index:5;pointer-events:none;background:var(--ink);color:var(--surface);padding:10px 13px;border-radius:10px;font-size:13.5px;line-height:1.45;transform:translate(-50%,calc(-100% - 16px));white-space:nowrap;opacity:0;transition:opacity .12s}
-.tip.show{opacity:1}
-.tip b{font-weight:800}
-.chart-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.ov{position:absolute;inset:0;pointer-events:none;z-index:1}
+.ov i{position:absolute;top:0;bottom:0}
+.evl{border-left:1.5px solid var(--fg);opacity:.55}
+.evband{background:var(--accent);opacity:.1}
+#now{position:absolute;top:0;bottom:0;width:var(--dw);left:calc(var(--lw) + var(--dw)*var(--T));background:var(--now-soft);pointer-events:none;z-index:1;transition:left .25s ease}
+#now::after{content:"";position:absolute;top:0;bottom:0;left:50%;border-left:2px solid var(--now);margin-left:-1px}
 
-/* Phasage */
-.phase{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:end;height:280px;padding:10px 4px 0;border-bottom:1px solid var(--line-2)}
-.phase-col{display:flex;align-items:flex-end;justify-content:center;gap:10px;height:100%}
-.pbar{position:relative;width:min(64px,38%);border-radius:8px 8px 0 0;transition:height .5s cubic-bezier(.2,.8,.2,1)}
-.pbar.budget{background:repeating-linear-gradient(135deg,var(--line-2) 0 2px,transparent 2px 7px);border:2px solid var(--line-2);border-bottom:0}
-.pbar.att{background:var(--bar-eng)}
-.pbar.att.over{background:var(--red)}
-.pbar .pv{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);padding-bottom:6px;font-size:13px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
-.phase-labels{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:12px;text-align:center}
-.phase-labels strong{display:block;font-size:17px}
-.phase-labels span{font-size:14px;font-variant-numeric:tabular-nums}
-.legend i.l-budget{background:repeating-linear-gradient(135deg,var(--line-2) 0 2px,transparent 2px 5px);border:1px solid var(--line-2)}
-.legend i.l-att{background:var(--bar-eng)} .legend i.l-att-over{background:var(--red)}
+.intro .bar{animation:grow .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i)*14ms);transform-origin:left}
+.intro .dia{animation:pop .5s ease both;animation-delay:calc(var(--i)*14ms + 200ms)}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes pop{from{transform:rotate(45deg) scale(0)}}
 
-/* Contingence */
-.cont-cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
-.cont-cell{background:var(--surface);padding:16px 18px}
-.cont-cell .stat-value{font-size:22px}
-.stack-row{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center;margin-top:20px}
-.stack-row[hidden]{display:none}
-.stack-row .stack-label{font-size:14px;font-weight:700;color:var(--ink-2)}
-.stack{display:flex;height:24px;border-radius:999px;overflow:hidden;background:var(--surface-2);border:1px solid var(--line)}
-.stack span{height:100%;transition:width .45s cubic-bezier(.2,.8,.2,1)}
-.stack .s-used{background:var(--bar-eng)}
-.stack .s-gap{background:var(--red)}
-.stack .s-free{background:var(--green)}
-.legend i.l-used{background:var(--bar-eng)} .legend i.l-gap{background:var(--red)} .legend i.l-free{background:var(--green)}
-.sim-note{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin-top:20px;padding:14px 18px;border-radius:var(--r-md);background:var(--orange-soft);color:var(--ink);font-size:15px}
-.sim-note[hidden]{display:none}
-.req-list{margin-top:26px;border-top:1px solid var(--line)}
-.req{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 28px;padding:20px 0;border-bottom:1px solid var(--line);align-items:center}
-.req:last-child{border-bottom:0}
-.req-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.req-id{font-size:13px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
-.tag{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--chip);color:var(--ink-2)}
-.tag.green{background:var(--green-soft);color:var(--green)} .tag.red{background:var(--red-soft);color:var(--red)} .tag.amber{background:var(--amber-soft);color:var(--amber)}
-.req-title{margin:6px 0 8px;font-weight:800;font-size:17px;line-height:1.35}
-.req-meta{display:flex;gap:6px 20px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
-.req-meta b{font-weight:700;color:var(--ink-2)}
-.req-side{display:flex;align-items:center;gap:18px}
-.req-amount{font-size:20px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
-.decide{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
-.decide button{border:0;background:none;padding:8px 15px;border-radius:999px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink-2);transition:background .15s,color .15s}
-.decide button:hover{background:var(--surface-2)}
-.decide button.ok[aria-pressed="true"]{background:var(--green);color:#fff}
-.decide button.ko[aria-pressed="true"]{background:var(--red);color:#fff}
-[data-theme="dark"] .decide button[aria-pressed="true"]{color:#161412}
-@media (max-width:760px){.req{grid-template-columns:1fr}.req-side{justify-content:space-between}.stack-row{grid-template-columns:1fr;gap:8px}}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty .btn{margin-top:10px}
 
-/* Alertes */
-.filters{display:flex;gap:8px;flex-wrap:wrap}
-.fchip{padding:8px 15px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);font-weight:700;font-size:14px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.fchip:hover{border-color:var(--ink-2)}
-.fchip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.alert{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:10px 24px;padding:22px 0;border-bottom:1px solid var(--line);align-items:start}
-.alert:last-child{border-bottom:0}
-.alert[hidden]{display:none}
-.lvl{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
-.lvl::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
-.lvl.critique{color:var(--red)} .lvl.vigilance{color:var(--amber)} .lvl.info{color:var(--green)}
-.alert h3{margin:0;font-size:17px;font-weight:800;line-height:1.35}
-.alert p{margin:6px 0 10px;color:var(--ink-2);max-width:75ch}
-.alert-impact{font-size:20px;font-weight:800;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
-.alert-impact small{display:block;font-size:12.5px;font-weight:600;color:var(--muted)}
-.empty{padding:28px 0;color:var(--muted)}
-@media (max-width:760px){.alert{grid-template-columns:1fr auto}.alert .lvl{grid-column:1 / -1}}
+/* Vue par semaine */
+.board{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:200px}
+.col.cur{border-color:var(--now);box-shadow:inset 0 3px 0 var(--now)}
+.col h3{margin:0;padding:12px 14px 8px;font:600 15px var(--display);display:flex;justify-content:space-between;gap:8px}
+.col h3 small{font:400 13px var(--body);color:var(--muted)}
+.col .list{display:flex;flex-direction:column;gap:8px;padding:4px 10px 12px}
+.card{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 10px 8px 12px;display:grid;gap:3px;position:relative;box-shadow:inset 3px 0 0 var(--sc)}
+.card:hover{border-color:var(--sc)}
+.card .top{display:flex;justify-content:space-between;gap:6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card .t{font-size:14px;line-height:1.3}
+.card .m{font-size:12.5px;color:var(--muted)}
+.card.st-fait .t{text-decoration:line-through;text-decoration-color:var(--done);color:var(--muted)}
+.badge{font-size:11.5px;font-weight:700;color:var(--sc)}
 
-/* Autres instances */
-.others{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
-.other{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px;text-decoration:none;transition:border-color .15s}
-.other:hover{border-color:var(--orange)}
-.other strong{display:block;font-size:17px;font-weight:800}
-.other span{font-size:14.5px;color:var(--muted)}
-.other .go{flex:none;font-weight:800;color:var(--orange)}
+/* Panneau détail */
+.panel{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(0,0,0,.12);z-index:20;transform:translateX(105%);transition:transform .28s cubic-bezier(.2,.7,.2,1);display:flex;flex-direction:column}
+.panel.open{transform:none}
+.ph{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.ph .crumb{font-size:13px;color:var(--muted)}
+.ph h2{margin:0;font:600 19px/1.3 var(--display);text-wrap:pretty}
+.ph .x{position:absolute;top:12px;right:12px;border:0;background:none;font-size:22px;line-height:1;color:var(--muted);padding:6px}
+.pb{padding:16px 20px;overflow:auto;display:grid;gap:18px;align-content:start}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
+.facts dt{color:var(--muted);font-size:13.5px}
+.facts dd{margin:0;font-weight:600}
+.status{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-weight:700;font-size:13px;color:var(--sc);background:color-mix(in srgb,var(--sc) 13%,transparent)}
+.mini{position:relative;height:30px;border-radius:6px;background:var(--we);overflow:hidden}
+.mini .bar{height:14px;margin-top:-7px;padding:0}
+.mini .dia{width:12px;height:12px;margin:-6px 0 0 -6px}
+.mini .t{position:absolute;top:0;bottom:0;border-left:2px solid var(--now)}
+.mini-l{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+.doneBtn{width:100%;padding:10px;border-radius:9px;border:1px solid var(--done);background:var(--done);color:#fff;font-weight:700}
+.doneBtn.on{background:none;color:var(--done)}
+.sib h4{margin:0 0 6px;font:600 14px var(--display)}
+.sib button{display:flex;gap:8px;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:7px;font-size:14px;align-items:baseline}
+.sib button:hover{background:var(--hover)}
+.sib button i{flex:none;width:8px;height:8px;border-radius:2px;background:var(--sc);transform:translateY(-1px)}
+.sib button span{color:var(--muted);font-size:12.5px;margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sib button.me{background:var(--accent-soft)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.18);z-index:19;opacity:0;pointer-events:none;transition:opacity .25s}
+.scrim.open{opacity:1;pointer-events:auto}
 
-/* ---------- Panneau latéral ---------- */
-.overlay{position:fixed;inset:0;z-index:60;background:rgba(25,18,10,.38);opacity:0;transition:opacity .22s}
-.overlay.show{opacity:1}
-.drawer{position:fixed;top:0;right:0;bottom:0;z-index:61;width:min(500px,100%);background:var(--surface);transform:translateX(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s linear .3s;display:flex;flex-direction:column;box-shadow:-24px 0 60px -24px rgba(0,0,0,.3);visibility:hidden}
-.drawer.open{transform:none;visibility:visible;transition:transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s}
-.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:26px 28px 20px;border-bottom:1px solid var(--line)}
-.drawer-head h2{margin:6px 0 2px;font-size:24px;font-weight:800;line-height:1.2}
-.drawer-body{flex:1;overflow-y:auto;padding:24px 28px 28px}
-.drawer-foot{display:flex;justify-content:space-between;gap:12px;padding:16px 28px;border-top:1px solid var(--line)}
-.d-big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.d-big .v{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1}
-.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;margin-top:22px}
-.d-grid > div{background:var(--surface);padding:14px 16px}
-.d-grid .stat-value{font-size:20px}
-.d-sec{margin-top:28px}
-.d-sec h3{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-.d-sec p{margin:0;color:var(--ink-2);line-height:1.6}
-.d-item{padding:12px 0;border-top:1px solid var(--line)}
-.d-item:first-of-type{border-top:0;padding-top:0}
-.d-item strong{display:block;font-weight:800}
-.d-item span{font-size:14px;color:var(--muted)}
+#tip{position:fixed;z-index:30;pointer-events:none;background:var(--fg);color:var(--bg);padding:8px 10px;border-radius:8px;font-size:13px;max-width:320px;line-height:1.35;opacity:0;transition:opacity .12s}
+#tip.on{opacity:1}
+#tip b{display:block;font-weight:600}
+#tip span{opacity:.75}
 
-/* ---------- Notification ---------- */
-.toast{position:fixed;left:50%;bottom:28px;z-index:80;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:var(--surface);padding:12px 20px;border-radius:999px;font-weight:700;font-size:14.5px;transition:opacity .2s,transform .2s;box-shadow:0 12px 30px -10px rgba(0,0,0,.35)}
-.toast.show{opacity:1;transform:translate(-50%,0)}
+.notes{color:var(--muted);font-size:13px;max-width:95ch;margin:0}
+.legend{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--c);vertical-align:-1px;margin-right:6px}
+.legend i.d{transform:rotate(45deg) scale(.8);border-radius:2px}
 
-
-.subnav .count.n{background:var(--chip);color:var(--ink-2)}
-main:focus,main:focus-visible{outline:none;box-shadow:none}
-.chart .dot{pointer-events:none}
-.overlay[hidden]{display:none}
-
-/* ---------- Impression et accessibilité ---------- */
-@media print{
-  :root{--bg:#fff}
-  .topbar,.subnav,.switcher,.theme-btn,.decide,.filters,.overlay,.drawer,.toast,.others-block{display:none!important}
-  .panel,.kpis{box-shadow:none}
-  .dsec{break-inside:avoid}
-  body{font-size:13px}
+@media (max-width:820px){
+  :root{--lw:230px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .situ{grid-template-columns:1fr}
+  h1{font-size:22px}
+  .al{grid-template-columns:1fr}.al .meta{grid-column:1}
+  .search input{width:200px}
 }
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="wrap">
-    <a class="brand" href="#/" aria-label="CBS One, retour au sommaire">
-      <!-- Logo : remplacez ce bloc par le logo officiel, par exemple <img src="logo-banque-populaire.svg" alt="Banque Populaire"> -->
-      <span class="brand-logo" aria-hidden="true"><span>Banque</span><span>Populaire</span></span>
-      <span class="brand-sep" aria-hidden="true"></span>
-      <span class="brand-app"><strong>CBS One</strong><span>Pilotage budgétaire</span></span>
-    </a>
-    <nav class="topnav" id="topnav" aria-label="Navigation principale"></nav>
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Passer en thème sombre">
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 1.8a8.2 8.2 0 0 1 0 16.4z" fill="currentColor"/></svg>
-    </button>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Planning des actions – Démarrage vague 1</h1>
+      <p class="sub">Programme CBS, du 5 au 30 octobre 2026. Source : fichier de suivi V1 du 7 octobre.</p>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </header>
+
+  <section class="situ" aria-label="Date de situation">
+    <label for="tslider">Situation au <output id="tout"></output></label>
+    <input type="range" id="tslider" min="0" max="25" step="1">
+    <button class="btn" id="todayBtn">Revenir à aujourd'hui</button>
+    <p class="hint">Faites glisser le curseur, cliquez sur un jour du calendrier ou utilisez les flèches ← → pour voir l'état du planning à une autre date. Les statuts et compteurs se recalculent.</p>
+  </section>
+
+  <div class="kpis" id="kpis" role="group" aria-label="Filtrer par statut"></div>
+
+  <div class="tools">
+    <div class="seg" role="group" aria-label="Vue">
+      <button data-view="gantt" aria-pressed="true">Planning</button>
+      <button data-view="board" aria-pressed="false">Par semaine</button>
+    </div>
+    <div class="search"><input type="search" id="q" placeholder="Rechercher une action, un porteur…" aria-label="Rechercher"><kbd>/</kbd></div>
+    <div class="seg" id="crit" role="group" aria-label="Criticité"></div>
+    <select id="porteur" aria-label="Porteur"></select>
+    <span class="sp"></span>
+    <label class="zoom" id="zoomWrap">Zoom <input type="range" id="zoom" min="26" max="72" value="40"></label>
+    <button class="btn" id="foldAll">Tout replier</button>
+    <button class="btn" id="reset" disabled>Réinitialiser les filtres</button>
   </div>
-</header>
+  <div class="chips" id="chips" role="group" aria-label="Chantiers"></div>
 
-<main id="app" tabindex="-1"></main>
+  <div id="ganttView">
+    <div class="gscroll" id="gscroll">
+      <div class="grid" id="grid">
+        <div id="hd"></div>
+        <div id="rows"></div>
+        <div class="ov" id="ov"></div>
+        <div id="now"></div>
+      </div>
+    </div>
+  </div>
+  <div id="boardView" hidden><div class="board" id="board"></div></div>
 
-<div class="overlay" id="overlay" hidden></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"></aside>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="legend">
+    <span><i style="--c:var(--bar)"></i>À venir</span>
+    <span><i style="--c:var(--accent)"></i>En cours</span>
+    <span><i style="--c:var(--late)"></i>Échéance dépassée, non soldée</span>
+    <span><i style="--c:var(--done)"></i>Fait</span>
+    <span><i class="d" style="--c:var(--muted)"></i>Jalon / décision</span>
+  </div>
+  <p class="notes">Cliquez sur une action pour l'ouvrir et la marquer comme faite (enregistré pour vos prochaines visites). Les dates du COPIL Go vague 1 (21/10), du kick-off (26–27/10) et du démarrage (28/10) sont reprises du visuel de référence, elles ne figurent pas dans le fichier de suivi. Les actions sans dates de début et de fin (RES-13 à RES-16) sont placées à leur échéance retenue.</p>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-hidden="true" aria-label="Détail de l'action"></aside>
+<div id="tip" role="tooltip"></div>
 
 <script>
-/* =====================================================================
-   DONNÉES DU PROGRAMME
-   Toutes les valeurs sont en MMAD. Remplacez-les par vos chiffres réels :
-   l'affichage, les totaux, les écarts et les graphiques se recalculent.
-   ===================================================================== */
-const PROGRAMME = {
-  budgetTotal: 942.7,          // enveloppes + contingence initiale
-  enveloppes: 805.9,
-  contingenceInitiale: 136.8
-};
+const DATA=[{"id": "RES-01", "ch": "Ressources", "br": "Squad Référentiel / Tenue de compte", "a": "Référents métier – Communiquer à la RH la liste nominative des profils réseau candidats pour la squad", "p": "DP métier", "c": "Haute", "s": 1, "e": 4}, {"id": "RES-02", "ch": "Ressources", "br": "Squad Référentiel / Tenue de compte", "a": "Référents métier – Étudier les situations réelles (statut BCP vs réseau, indemnités de mobilité) et communiquer les modalités de mobilisation", "p": "RH", "c": "Moyenne", "s": 1, "e": 4}, {"id": "RES-03", "ch": "Ressources", "br": "Squad Comptabilité", "a": "Business Lead – Contacter le lead compta désigné par le CFO", "p": "DP métier", "c": "Moyenne", "s": 1, "e": 4}, {"id": "RES-04", "ch": "Ressources", "br": "Squad Comptabilité", "a": "Émettre la lettre de nomination du lead comptabilité", "p": "RH", "c": "Haute", "s": 1, "e": 16}, {"id": "RES-05", "ch": "Ressources", "br": "Squad Comptabilité", "a": "Experts métier – Faire intervenir deux experts : Hassane (comptabilité) et Marikaz (RDJ)", "p": "DP métier", "c": "Haute", "s": 1, "e": 11}, {"id": "RES-06", "ch": "Ressources", "br": "Squad Process & Orga / Change", "a": "Lead Change & Orga – Fusionner les leads Process-Orga et Change en un rôle unique, porté par la personne recrutée pour le Change", "p": "RH", "c": "Moyenne", "s": 1, "e": 11}, {"id": "RES-07", "ch": "Ressources", "br": "Squad Tests Factory", "a": "Consultant AMOA – Prévoir une prestation d'appui externe ponctuelle (AMOA) pour la mise en place de la factory", "p": "DP métier", "c": "Moyenne", "s": 1, "e": 11}, {"id": "RES-08", "ch": "Ressources", "br": "Squad Migration de données", "a": "IT Lead / Coord. Legacy – Poursuivre une semaine de plus la recherche d'un profil en interne", "p": "DP IT", "c": "Haute", "s": 18, "e": 18}, {"id": "RES-09", "ch": "Ressources", "br": "Squad Migration de données", "a": "IT Lead / Coord. Legacy – Lancer le recrutement externe en parallèle", "p": "RH", "c": "Haute", "s": 1, "e": 4}, {"id": "RES-10", "ch": "Ressources", "br": "Squad Architecture", "a": "Architecte – Accélérer le recrutement externe d'un profil architecte", "p": "RH", "c": "Moyenne", "s": 11, "e": 11}, {"id": "RES-11", "ch": "Ressources", "br": "Squad API Management / Intégration", "a": "Profil ESB – Évaluer si le profil ESB recruté pour la squad Désimbrication peut être mobilisé sur cette squad", "p": "DP IT", "c": "Moyenne", "s": 11, "e": 11}, {"id": "RES-12", "ch": "Ressources", "br": "Squad Habilitation", "a": "Tous les profils de squad – Tenir une réunion avec BCP Tech pour préciser l'offre", "p": "DP IT", "c": "Haute", "s": 17, "e": 21}, {"id": "RES-13", "ch": "Ressources", "br": "Prestations d'appui", "a": "Déclencher une prestation DBA", "p": "ITSS / Achats", "c": "", "s": 21, "e": 21}, {"id": "RES-14", "ch": "Ressources", "br": "PMO Ops", "a": "Sécuriser les PMO Ops pour le démarrage", "p": "PMO / RH", "c": "", "s": 22, "e": 22}, {"id": "RES-15", "ch": "Ressources", "br": "Onboarding", "a": "Planifier le onboarding", "p": "PMO", "c": "", "s": 23, "e": 23}, {"id": "RES-16", "ch": "Ressources", "br": "Onboarding", "a": "Onboarding des équipes", "p": "PMO", "c": "", "s": 24, "e": 24}, {"id": "ACH-01", "ch": "Achats", "br": "Temenos", "a": "Séance d'ajustement du scope avec Temenos", "p": "Achats / Programme", "c": "Haute", "s": 2, "e": 2}, {"id": "ACH-02", "ch": "Achats", "br": "Temenos", "a": "Réception de l'offre ajustée Temenos", "p": "Temenos", "c": "Haute", "s": 4, "e": 4}, {"id": "ACH-03", "ch": "Achats", "br": "Temenos", "a": "Négociation financière Temenos", "p": "Achats", "c": "Haute", "s": 7, "e": 15}, {"id": "ACH-04", "ch": "Achats", "br": "Temenos", "a": "Fin de négociation Temenos", "p": "Achats", "c": "Haute", "s": 15, "e": 15}, {"id": "ACH-05", "ch": "Achats", "br": "Cockpit", "a": "Adjudication cockpit", "p": "Achats", "c": "Haute", "s": 2, "e": 2}, {"id": "ACH-06", "ch": "Achats", "br": "Cockpit", "a": "Contrat cockpit", "p": "Achats", "c": "Haute", "s": 16, "e": 16}, {"id": "ACH-07", "ch": "Achats", "br": "Désimbrication & ressources", "a": "Identifier les pistes tactiques pour les besoins critiques (BCP Tech, contrats cadres)", "p": "Achats / DSI", "c": "Haute", "s": 1, "e": 4}, {"id": "ACH-08", "ch": "Achats", "br": "Désimbrication & ressources", "a": "Répondre aux questions des soumissionnaires", "p": "Programme", "c": "Moyenne", "s": 2, "e": 3}, {"id": "ACH-09", "ch": "Achats", "br": "Désimbrication & ressources", "a": "Réception des offres", "p": "Achats", "c": "Moyenne", "s": 4, "e": 4}, {"id": "ACH-10", "ch": "Achats", "br": "Désimbrication & ressources", "a": "Dépouillement des offres", "p": "Achats / Programme", "c": "Moyenne", "s": 7, "e": 18}, {"id": "ACH-11", "ch": "Achats", "br": "Désimbrication & ressources", "a": "Adjudication désimbrication & ressources", "p": "Achats", "c": "Moyenne", "s": 16, "e": 16}, {"id": "ACH-12", "ch": "Achats", "br": "Désimbrication & ressources", "a": "Contractualisation désimbrication & ressources", "p": "Achats", "c": "Basse", "s": 21, "e": 60}, {"id": "ACH-13", "ch": "Achats", "br": "Infra / ITSS", "a": "Traduire le besoin ITSS en commande et faire refaire le devis", "p": "Achats", "c": "Haute", "s": 7, "e": 9}, {"id": "ACH-14", "ch": "Achats", "br": "Infra / ITSS", "a": "Décision sur la partie infra pour passer commande", "p": "Programme / DSI", "c": "Haute", "s": 10, "e": 10}, {"id": "ACH-15", "ch": "Achats", "br": "Infra / ITSS", "a": "BDC infra", "p": "Achats", "c": "Haute", "s": 4, "e": 4}, {"id": "ACH-16", "ch": "Achats", "br": "Infra / ITSS", "a": "Contrat ITSS", "p": "Achats", "c": "Haute", "s": 18, "e": 18}, {"id": "ACH-17", "ch": "Achats", "br": "Cadrages", "a": "Cadrage change", "p": "Achats", "c": "Moyenne", "s": 18, "e": 18}, {"id": "ACH-18", "ch": "Achats", "br": "Cadrages", "a": "Cadrage archi", "p": "Achats", "c": "Basse", "s": 24, "e": 24}, {"id": "ITA-01", "ch": "IT / Architecture", "br": "Architecture", "a": "Travaux d'architecture en interne (carto flux, legacy, référentiel, chantiers)", "p": "Archi", "c": "Haute", "s": 1, "e": 21}, {"id": "ITA-02", "ch": "IT / Architecture", "br": "Architecture", "a": "Matrice de flux et architecture technique détaillée disponibles", "p": "Archi", "c": "Haute", "s": 7, "e": 7}, {"id": "ITA-03", "ch": "IT / Architecture", "br": "Architecture", "a": "Scope V1 : désimbrication, flux, data", "p": "Archi", "c": "Haute", "s": 21, "e": 21}, {"id": "ITA-04.1", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Retour officiel ITSS sur le dimensionnement de l'option 2 et l'impact", "p": "ITSS", "c": "Haute", "s": 4, "e": 4}, {"id": "ITA-04.2", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Traduire l'impact exprimé par ITSS en besion (power, x86)", "p": "Lead infra", "c": "Haute", "s": 4, "e": 4}, {"id": "ITA-04.3", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Reboucler avec les achats pour estimation des couts", "p": "Lead infra/ Lead achats", "c": "Haute", "s": 4, "e": 4}, {"id": "ITA-05", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Plan détaillé de création des environnements (REF, préprod, DEV)", "p": "ITSS", "c": "Haute", "s": 4, "e": 4}, {"id": "ITA-06", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Dérogation sécurité / solution tactique d'accès aux environnements", "p": "Sécurité / ITSS", "c": "Haute", "s": 1, "e": 4}, {"id": "ITA-07", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Préparation de l'environnement de référence (REF)", "p": "ITSS (architecte)", "c": "Haute", "s": 7, "e": 18}, {"id": "ITA-08", "ch": "IT / Architecture", "br": "Environnements (ITSS)", "a": "Plan Env. V1 finalisé", "p": "ITSS", "c": "Haute", "s": 15, "e": 15}, {"id": "ITA-09", "ch": "IT / Architecture", "br": "TMA", "a": "Session de présentation TMA", "p": "ITSS / TMA", "c": "Haute", "s": 1, "e": 11}, {"id": "ITA-10", "ch": "IT / Architecture", "br": "TMA", "a": "Env. TMA", "p": "ITSS", "c": "Haute", "s": 11, "e": 11}, {"id": "LOG-01", "ch": "Logistique", "br": "Plateau RdC", "a": "Préparation du plateau RdC (postes, accès)", "p": "Logistique", "c": "Haute", "s": 2, "e": 11}, {"id": "LOG-02", "ch": "Logistique", "br": "Plateau RdC", "a": "Installation des équipes affectées au programme", "p": "Logistique", "c": "Haute", "s": 8, "e": 8}, {"id": "LOG-03", "ch": "Logistique", "br": "Plateau RdC", "a": "Plateau prêt", "p": "Logistique", "c": "Haute", "s": 11, "e": 11}, {"id": "GOU-01", "ch": "Gouvernance", "br": "Pilotage PMO", "a": "Consolider le fichier d'actions", "p": "PMO", "c": "Haute", "s": 2, "e": 2}, {"id": "GOU-02", "ch": "Gouvernance", "br": "Pilotage PMO", "a": "Valider les deadlines", "p": "PMO", "c": "Haute", "s": 2, "e": 2}, {"id": "GOU-03", "ch": "Gouvernance", "br": "Pilotage PMO", "a": "Retour sur la matrice des risques", "p": "PMO", "c": "Moyenne", "s": 1, "e": 4}, {"id": "GOU-04", "ch": "Gouvernance", "br": "Pilotage PMO", "a": "Réunion sur les dépendances", "p": "PMO", "c": "Moyenne", "s": 1, "e": 11}, {"id": "GOU-05", "ch": "Gouvernance", "br": "Lettres de mission & budget", "a": "Revue du budget", "p": "PMO / Direction programme", "c": "Haute", "s": 2, "e": 2}, {"id": "GOU-06", "ch": "Gouvernance", "br": "Lettres de mission & budget", "a": "Lettres de mission / structure cockpit", "p": "Présidence / PMO", "c": "Haute", "s": 3, "e": 3}, {"id": "GOU-07", "ch": "Gouvernance", "br": "Lettres de mission & budget", "a": "Budget VF", "p": "PMO", "c": "Haute", "s": 16, "e": 16}, {"id": "GOU-08", "ch": "Gouvernance", "br": "Outillage & méthode", "a": "Décision outillage", "p": "PMO", "c": "Moyenne", "s": 3, "e": 3}, {"id": "GOU-09", "ch": "Gouvernance", "br": "Outillage & méthode", "a": "Corpus méthodo", "p": "PMO", "c": "Moyenne", "s": 17, "e": 17}, {"id": "GOU-10", "ch": "Gouvernance", "br": "Outillage & méthode", "a": "Configuration de l'outillage & formation", "p": "PMO / ITSS", "c": "Moyenne", "s": 17, "e": 17}, {"id": "GOU-11", "ch": "Gouvernance", "br": "Design Authority", "a": "Figer le contenu du Design Authority n°1", "p": "Archi", "c": "Moyenne", "s": 8, "e": 8}, {"id": "GOU-12", "ch": "Gouvernance", "br": "Design Authority", "a": "Design Authority n°1", "p": "Archi", "c": "Moyenne", "s": 11, "e": 11}, {"id": "GOU-13", "ch": "Gouvernance", "br": "Design Authority", "a": "Figer le contenu du Design Authority n°2", "p": "Archi", "c": "Moyenne", "s": 15, "e": 15}, {"id": "GOU-14", "ch": "Gouvernance", "br": "Design Authority", "a": "Design Authority n°2", "p": "Archi", "c": "Moyenne", "s": 18, "e": 18}, {"id": "ASS-01", "ch": "Assessment", "br": "Ateliers", "a": "Finalisation des ateliers d'assessment", "p": "Assessment", "c": "Haute", "s": 1, "e": 16}, {"id": "ASS-02", "ch": "Assessment", "br": "Ateliers", "a": "Ateliers complémentaires R26 (fonctionnel, architecture, observabilité, orienté métier)", "p": "Assessment", "c": "Moyenne", "s": 1, "e": 11}, {"id": "ASS-03", "ch": "Assessment", "br": "Ateliers", "a": "Restitution finale", "p": "Assessment", "c": "Haute", "s": 21, "e": 21}, {"id": "ASS-04", "ch": "Assessment", "br": "Scope V1", "a": "Nettoyer les besoins V1 (doublons)", "p": "Métiers / Programme", "c": "Haute", "s": 1, "e": 11}, {"id": "ASS-05", "ch": "Assessment", "br": "Scope V1", "a": "Décider de l'usage du nouveau module de tarification", "p": "Métiers", "c": "Moyenne", "s": 7, "e": 11}, {"id": "ASS-06", "ch": "Assessment", "br": "Scope V1", "a": "Statuer sur le scope fonctionnel et technique V1", "p": "Programme", "c": "Haute", "s": 11, "e": 11}, {"id": "ASS-07", "ch": "Assessment", "br": "Scope V1", "a": "Scope fonctionnel et technique V1", "p": "Programme", "c": "Haute", "s": 16, "e": 16}, {"id": "ASS-08", "ch": "Assessment", "br": "Scope V1", "a": "Sujet monétique instruit", "p": "Omar", "c": "Moyenne", "s": 17, "e": 17}, {"id": "ASS-09", "ch": "Assessment", "br": "Ateliers", "a": "Validation des livrables ITSS", "p": "DPs", "c": "Haute", "s": 21, "e": 21}, {"id": "COM-01", "ch": "Change & Com", "br": "Identité visuelle", "a": "Test de l'identité visuelle auprès du réseau (1 sem.)", "p": "Change & Com", "c": "Moyenne", "s": 4, "e": 11}, {"id": "COM-02", "ch": "Change & Com", "br": "Identité visuelle", "a": "Habillage", "p": "Change & Com", "c": "Moyenne", "s": 14, "e": 18}, {"id": "COM-03", "ch": "Change & Com", "br": "Lancement", "a": "Planifier la journée de lancement et chiffrer son budget", "p": "Change & Com", "c": "Moyenne", "s": 1, "e": 11}, {"id": "COM-04", "ch": "Change & Com", "br": "Lancement", "a": "Communication officielle go programme", "p": "Change & Com", "c": "Haute", "s": 21, "e": 21}];
+const N=26;
+const MO=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const WD=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+const dt=d=>new Date(2026,9,5+d);
+const fmt=d=>{const t=dt(d);return t.getDate()+' '+MO[t.getMonth()]};
+const fmtL=d=>{const t=dt(d);return WD[t.getDay()]+' '+t.getDate()+' '+MO[t.getMonth()]};
+const isWE=d=>dt(d).getDay()%6===0;
+const bdays=(s,e)=>{let n=0;for(let d=s;d<=e;d++)if(!isWE(d))n++;return n};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const EVENTS=[{d:16,l:'COPIL Go vague 1'},{d:21,w:2,l:'Kick-off 26–27'},{d:23,l:'Démarrage',go:1}];
+const CHS=[...new Set(DATA.map(r=>r.ch))];
+const PORTEURS=[...new Set(DATA.flatMap(r=>r.p.split('/').map(x=>x.trim()).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'fr'));
+const ST={venir:'À venir',cours:'En cours',retard:'Échéance dépassée',fait:'Fait'};
 
-const ENVELOPPES = [
-  { id: 'delivery',  nom: 'Delivery (intégrateur)',        porteur: 'Direction Delivery',        budget: 312.4 },
-  { id: 'licences',  nom: 'Licences et éditeur',           porteur: 'Achats IT',                 budget: 168.0 },
-  { id: 'infra',     nom: 'Infrastructure et hébergement', porteur: 'Direction Infrastructure',  budget: 94.5 },
-  { id: 'migration', nom: 'Migration des données',         porteur: 'Direction Data',            budget: 72.3 },
-  { id: 'tests',     nom: 'Tests et recette',              porteur: 'Direction Qualité',         budget: 58.6 },
-  { id: 'change',    nom: 'Conduite du changement',        porteur: 'RH et Transformation',      budget: 41.2 },
-  { id: 'pmo',       nom: 'PMO et AMOA',                   porteur: 'Bureau de programme',       budget: 58.9 }
-];
+const realToday=(()=>{const n=new Date();return Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-new Date(2026,9,5))/864e5)})();
+const defT=realToday>=0&&realToday<N?realToday:2;
 
-const COMMENTAIRES = {
-  delivery:  "Avenant n°3 de l'intégrateur en négociation : la charge des lots paiements et crédits dépasse l'estimation de cadrage.",
-  licences:  "Redevances 2026 facturées. Économie sur les modules optionnels non activés.",
-  infra:     "Deux environnements de recette maintenus trois mois de plus après le décalage du lot 3.",
-  migration: "Le troisième cycle de migration à blanc fait apparaître 18 % de données supplémentaires à reprendre.",
-  tests:     "Campagne de non-régression étendue au lot 3.",
-  change:    "Formations regroupées en e-learning : l'économie est confirmée.",
-  pmo:       "Staffing AMOA stabilisé jusqu'à la bascule."
-};
+const S={view:'gantt',T:defT,crit:'Toutes',q:'',porteur:'',chs:new Set(),status:null,collapsed:new Set(),done:{},sel:null};
 
-/* État des enveloppes à une date : [atterrissage, engagé] */
-const ETAT_23_09 = { delivery:[334.4,241.6], licences:[166.5,150.2], infra:[97.3,61.4], migration:[75.7,38.9], tests:[59.8,22.1], change:[39.4,14.6], pmo:[57.7,39.8] };
-const ETAT_12_09 = { delivery:[332.0,236.9], licences:[166.5,149.8], infra:[97.3,59.7], migration:[75.1,37.2], tests:[59.8,20.4], change:[39.4,13.9], pmo:[57.7,38.6] };
-const ETAT_COMITES_12_09 = { delivery:[334.4,236.9], licences:[166.5,149.8], infra:[97.3,59.7], migration:[75.7,37.2], tests:[59.8,20.4], change:[39.4,13.9], pmo:[57.7,38.6] };
+/* Persistance des actions faites */
+const store=typeof window.storage!=='undefined'?window.storage:null;
+async function loadDone(){if(!store)return;try{const r=await store.get('planning-v1-done',false);if(r&&r.value)S.done=JSON.parse(r.value)}catch(e){}}
+async function saveDone(){if(!store)return;try{await store.set('planning-v1-done',JSON.stringify(S.done),false)}catch(e){console.error(e)}}
 
-/* Consolidations antérieures, utilisées pour la trajectoire */
-const HISTORIQUE = [
-  { date: '2026-05-15', att: 801.2, source: 'Consolidation mensuelle' },
-  { date: '2026-06-12', att: 806.0, source: 'Consolidation mensuelle' },
-  { date: '2026-07-10', att: 809.4, source: 'Consolidation mensuelle' },
-  { date: '2026-08-12', att: 812.7, source: 'Comité de pilotage' },
-  { date: '2026-08-29', att: 822.8, source: 'Comité sponsors' }
-];
+const status=r=>S.done[r.id]?'fait':r.e<S.T?'retard':r.s<=S.T?'cours':'venir';
+const friday=()=>S.T-((dt(S.T).getDay()+6)%7)+4;
+const thisWeek=r=>!S.done[r.id]&&r.e>=S.T&&r.e<=friday();
+function baseMatch(r){
+  if(S.crit!=='Toutes'&&r.c!==S.crit)return false;
+  if(S.chs.size&&!S.chs.has(r.ch))return false;
+  if(S.porteur&&!r.p.split('/').map(x=>x.trim()).includes(S.porteur))return false;
+  if(S.q){const h=(r.id+' '+r.a+' '+r.p+' '+r.br+' '+r.ch).toLowerCase();if(!S.q.split(/\s+/).every(w=>h.includes(w)))return false}
+  return true}
+function statusMatch(r){if(!S.status)return true;if(S.status==='semaine')return thisWeek(r);return status(r)===S.status}
+const visible=()=>DATA.filter(r=>baseMatch(r)&&statusMatch(r));
 
-const ALERTES = {
-  A1: { env:'delivery',  titre:"Dérive de la charge intégrateur", texte:"L'avenant n°3 en négociation porte la charge des lots paiements et crédits au-delà du cadrage. Point de sortie attendu avant fin septembre.", porteur:'Direction Delivery', echeance:'2026-09-30' },
-  A2: { env:'migration', titre:"Volumétrie de reprise sous-estimée", texte:"Le troisième cycle de migration à blanc révèle 18 % de données supplémentaires. Le plan de reprise doit être recalé.", porteur:'Direction Data', echeance:'2026-10-07' },
-  A3: { env:'infra',     titre:"Environnements de recette prolongés", texte:"Deux environnements sont maintenus trois mois de plus suite au décalage du lot 3.", porteur:'Direction Infrastructure', echeance:'2026-10-15' },
-  A4: { env:'tests',     titre:"Disponibilité des recetteurs métier", texte:"Les équipes métier ne sont disponibles qu'à 70 % du prévu en octobre : risque de glissement de la recette.", porteur:'Direction Qualité', echeance:'2026-10-10' },
-  A5: { env:'licences',  titre:"Exposition au change EUR/MAD", texte:"Les redevances éditeur 2027 sont libellées en euros. Une hausse de 2 % du cours représenterait environ 1,1 MMAD.", porteur:'Achats IT', echeance:'2026-12-31' },
-  A6: { env:'change',    titre:"Économie sur la formation", texte:"Le passage en e-learning libère 1,8 MMAD, à réaffecter ou à rendre à la contingence.", porteur:'RH et Transformation', echeance:'2026-10-31' }
-};
+/* Contrôles */
+const critBox=$('crit');
+['Toutes','Haute','Moyenne','Basse'].forEach(c=>{const b=document.createElement('button');b.textContent=c;b.dataset.c=c;b.onclick=()=>{S.crit=c;update()};critBox.appendChild(b)});
+$('porteur').innerHTML='<option value="">Tous les porteurs</option>'+PORTEURS.map(p=>`<option>${esc(p)}</option>`).join('');
+$('porteur').onchange=e=>{S.porteur=e.target.value;update()};
+$('q').addEventListener('input',e=>{S.q=e.target.value.toLowerCase().trim();update()});
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{S.view=b.dataset.view;update()});
+const slider=$('tslider');
+slider.oninput=e=>setT(+e.target.value);
+$('todayBtn').onclick=()=>setT(defT);
+$('zoom').oninput=e=>document.documentElement.style.setProperty('--dw',e.target.value+'px');
+$('foldAll').onclick=()=>{if(S.collapsed.size)S.collapsed.clear();else CHS.forEach(c=>S.collapsed.add(c));update()};
+$('reset').onclick=()=>{S.crit='Toutes';S.q='';S.porteur='';S.chs.clear();S.status=null;$('q').value='';$('porteur').value='';update()};
+function setT(t){t=Math.max(0,Math.min(N-1,t));if(t===S.T)return;S.T=t;update()}
 
-/* type : 'contingence' (transfert de la contingence vers l'enveloppe),
-          'economie' (baisse de l'atterrissage), 'phasage' (décalage entre exercices) */
-const DEMANDES = {
-  D1: { ref:'DA-014', titre:"Mobiliser la contingence pour l'avenant intégrateur n°3", env:'delivery', montant:12.0, type:'contingence', demandeur:'Direction programme' },
-  D2: { ref:'DA-015', titre:"Renforcer l'équipe migration (3 ETP sur 4 mois)", env:'migration', montant:2.1, type:'contingence', demandeur:'Direction Data' },
-  D3: { ref:'DA-016', titre:"Prolonger deux environnements de recette jusqu'à fin janvier", env:'infra', montant:1.4, type:'contingence', demandeur:'Direction Infrastructure' },
-  D4: { ref:'DA-012', titre:"Mobiliser un expert performance pour la bascule", env:'pmo', montant:0.6, type:'contingence', demandeur:'Bureau de programme' },
-  D5: { ref:'DS-007', titre:"Reporter les fonctionnalités non critiques du lot 4 après la bascule", env:'delivery', montant:3.5, type:'economie', demandeur:'Direction programme' },
-  D6: { ref:'DC-003', titre:"Valider le report de 15,3 MMAD de Delivery de 2026 vers 2027", env:'delivery', montant:15.3, type:'phasage', demandeur:'Contrôle de gestion' }
-};
-
-const INSTANCES = [
-  { id:'hebdo', nom:'Revue budgétaire hebdomadaire', court:'Revue hebdo', frequence:'Hebdomadaire', duree:'1 h',
-    sections:['synthese','enveloppes','trajectoire','contingence','alertes'], libelleDecisions:'Arbitrages' },
-  { id:'sponsors', nom:'Comité sponsors — point financier', court:'Comité sponsors', frequence:'Toutes les 2 semaines', duree:'15 min',
-    sections:['synthese','contingence','enveloppes','trajectoire','alertes'], libelleDecisions:'Décisions' },
-  { id:'copil', nom:'Comité de pilotage — séquence financière', court:'Comité de pilotage', frequence:'Mensuelle', duree:'15 min',
-    sections:['synthese','phasage','contingence','enveloppes','trajectoire','alertes'], libelleDecisions:'Décisions' }
-];
-
-/* Une édition = une séance figée à sa date.
-   alertes  : [id, niveau ('critique' | 'vigilance' | 'info'), impact MMAD]
-   demandes : [id, statut ('attente' | 'validee' | 'refusee'), échéance]  */
-const EDITIONS = [
-  { instance:'hebdo', date:'2026-09-23', etat:ETAT_23_09, contingenceRestante:118.7,
-    delta:{ ref:'Revue hebdo du 12/09/2026', env:{ delivery:2.4, migration:0.6 } },
-    synthese:"Atterrissage à 830,8 MMAD pour 805,9 de budget hors contingence, en hausse de 3 MMAD sur la semaine : l'intégrateur concentre la dérive. Trois demandes attendent un arbitrage avant le comité sponsors.",
-    messages:[
-      "Delivery : +2,4 MMAD sur la semaine, portés par les lots paiements. L'enveloppe dépasse désormais son budget de 22 MMAD.",
-      "Migration des données : +0,6 MMAD après le troisième cycle de migration à blanc.",
-      "L'écart de 24,9 MMAD reste couvert par la contingence, avec 93,8 MMAD de marge."
-    ],
-    alertes:[['A1','critique',22.0],['A2','critique',3.4],['A3','critique',2.8],['A4','vigilance',1.2],['A5','vigilance',1.1],['A6','info',-1.8]],
-    demandes:[['D1','attente','Comité sponsors du 26/09'],['D2','attente','Revue hebdo du 30/09'],['D3','attente','Revue hebdo du 30/09']]
-  },
-  { instance:'hebdo', date:'2026-09-12', etat:ETAT_12_09, contingenceRestante:118.7,
-    delta:{ ref:'Consolidation du 29/08/2026', env:{ delivery:3.8, infra:0.7, migration:0.5 } },
-    synthese:"Atterrissage à 827,8 MMAD, en hausse de 5 MMAD depuis la consolidation du 29/08. La dérive Delivery se confirme et l'avenant n°3 de l'intégrateur est en préparation.",
-    messages:[
-      "Delivery : +3,8 MMAD depuis le 29/08, l'avenant n°3 de l'intégrateur est en préparation.",
-      "Infrastructure : +0,7 MMAD liés au décalage du lot 3.",
-      "La demande d'expert performance (0,6 MMAD) est validée en séance."
-    ],
-    alertes:[['A1','critique',19.6],['A2','critique',2.8],['A3','vigilance',2.8],['A5','vigilance',1.1]],
-    demandes:[['D1','attente','Comité sponsors du 12/09'],['D4','validee','Revue hebdo du 12/09']]
-  },
-  { instance:'sponsors', date:'2026-09-12', etat:ETAT_COMITES_12_09, contingenceRestante:118.7,
-    delta:{ ref:'Comité sponsors du 29/08/2026', env:{ delivery:6.2, infra:1.0, migration:0.8 } },
-    synthese:"Le programme atterrit à 830,8 MMAD pour 805,9 d'enveloppes : le dépassement se concentre sur Delivery (+22) et reste couvert par la contingence (118,7 disponibles). Deux décisions sont attendues des sponsors.",
-    messages:[
-      "Delivery porte l'essentiel de l'écart : +22 MMAD pour 312,4 de budget.",
-      "La contingence couvre l'écart et laisse 93,8 MMAD de marge.",
-      "Décisions attendues : mobiliser 12 MMAD pour l'avenant intégrateur et reporter les fonctionnalités non critiques du lot 4."
-    ],
-    alertes:[['A1','critique',22.0],['A2','critique',3.4],['A3','critique',2.8],['A5','vigilance',1.1]],
-    demandes:[['D1','attente','En séance'],['D5','attente','En séance']]
-  },
-  { instance:'copil', date:'2026-09-12', etat:ETAT_COMITES_12_09, contingenceRestante:118.7,
-    delta:{ ref:'Comité de pilotage du 12/08/2026', env:{ delivery:14.5, migration:2.1, infra:1.5, tests:0.4, change:-0.4 } },
-    synthese:"Trajectoire tenue dans le budget total de 942,7 MMAD grâce à la contingence ; le report Delivery vers 2027 crée un écart d'exercice à valider.",
-    messages:[
-      "Atterrissage en hausse de 18,1 MMAD depuis le comité du 12/08, dont 14,5 MMAD sur Delivery.",
-      "Le budget total de 942,7 MMAD est respecté, contingence comprise.",
-      "Avec le report de 15,3 MMAD, l'exercice 2027 dépasse son enveloppe de 30,7 MMAD : écart d'exercice à valider."
-    ],
-    alertes:[['A1','critique',22.0],['A2','critique',3.4],['A3','vigilance',2.8],['A5','vigilance',1.1],['A6','info',-1.8]],
-    demandes:[['D6','attente','En séance'],['D1','attente','Comité sponsors du 26/09']],
-    phasage:{
-      budget:            { 2025:248.6, 2026:361.2, 2027:196.1 },
-      avecReport:        { 2025:246.9, 2026:357.1, 2027:226.8 },
-      sansReport:        { 2025:246.9, 2026:372.4, 2027:211.5 }
-    }
-  }
-];
-</script>
-<script>
-(() => {
-'use strict';
-
-/* ---------- Outils ---------- */
-const $  = (s, el = document) => el.querySelector(s);
-const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-const app = $('#app');
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-
-const nf1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const nf0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
-const pf  = new Intl.NumberFormat('fr-FR', { style: 'percent', maximumFractionDigits: 0 });
-const pf1 = new Intl.NumberFormat('fr-FR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const r1 = n => Math.round(n * 10) / 10;
-const fmt = n => nf1.format(r1(n));
-const fmtTrim = n => { const v = r1(n); return Number.isInteger(v) ? nf0.format(v) : nf1.format(v); };
-const signed = (n, trim = false) => {
-  const v = r1(n); const s = v > 0 ? '+' : v < 0 ? '−' : '';
-  return s + (trim ? fmtTrim(Math.abs(v)) : fmt(Math.abs(v)));
-};
-const signedPct = n => (n > 0 ? '+' : n < 0 ? '−' : '') + pf1.format(Math.abs(n));
-const U = '<span class="unit">MMAD</span>';
-
-const toDate = s => new Date(s + 'T00:00:00Z');
-const dfLong  = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-const dfShort = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
-const dfTiny  = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
-const dLong = s => dfLong.format(toDate(s));
-const dShort = s => dfShort.format(toDate(s));
-const dTiny = s => dfTiny.format(toDate(s));
-
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-const ICON = {
-  prev: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  next: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  close: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-  print: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6V2h8v4M4 12H2.5A1.5 1.5 0 0 1 1 10.5v-3A1.5 1.5 0 0 1 2.5 6h11A1.5 1.5 0 0 1 15 7.5v3a1.5 1.5 0 0 1-1.5 1.5H12M4 9.5h8V14H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>'
-};
-
-/* ---------- Modèle ---------- */
-const instIndex = id => INSTANCES.findIndex(i => i.id === id);
-const instById = id => INSTANCES.find(i => i.id === id);
-const envById = id => ENVELOPPES.find(e => e.id === id);
-const edKey = ed => ed.instance + '/' + ed.date;
-const edHash = ed => '#/seance/' + edKey(ed);
-const editionsOf = id => EDITIONS.filter(e => e.instance === id).sort((a, b) => b.date.localeCompare(a.date));
-const latestOf = id => editionsOf(id)[0];
-const byRecent = (a, b) => b.date.localeCompare(a.date) || instIndex(a.instance) - instIndex(b.instance);
-const latestOverall = () => [...EDITIONS].sort(byRecent)[0];
-
-const calcCache = new Map();
-function calc(ed) {
-  if (calcCache.has(ed)) return calcCache.get(ed);
-  const rows = ENVELOPPES.map(e => {
-    const [att, eng] = ed.etat[e.id];
-    return { ...e, att, eng, raf: r1(att - eng), ecart: r1(att - e.budget), delta: r1(ed.delta.env[e.id] || 0) };
-  });
-  const sum = k => r1(rows.reduce((s, r) => s + r[k], 0));
-  const att = sum('att'), eng = sum('eng'), budget = sum('budget');
-  const ecart = r1(att - budget);
-  const crit = ed.alertes.filter(a => a[1] === 'critique').length;
-  const statut = ecart > ed.contingenceRestante
-    ? { cls: '', txt: 'Dépassement du budget total' }
-    : ecart > 0 ? { cls: '', txt: 'Dépassement des enveloppes' } : { cls: 'ok', txt: 'Dans les enveloppes' };
-  const c = {
-    rows, att, eng, budget, ecart, statut, crit,
-    raf: r1(att - eng),
-    delta: sum('delta'),
-    ecartPct: ecart / budget,
-    enDepassement: rows.filter(r => r.ecart > 0).length,
-    pire: rows.reduce((a, b) => (b.ecart > a.ecart ? b : a)),
-    marge: r1(ed.contingenceRestante - ecart)
-  };
-  calcCache.set(ed, c);
-  return c;
+/* Rendu */
+function renderTop(){
+  const T=S.T;
+  $('tout').textContent=fmtL(T)+(T===realToday?' (aujourd’hui)':'');
+  slider.value=T;$('todayBtn').disabled=T===defT;
+  document.documentElement.style.setProperty('--T',T);
+  const cd=(d,l,go)=>{const n=d-T;return `<div class="cd${go?' go':''}"><b>${n>0?'J-'+n:n===0?'Jour J':'✓'}</b><span>${l}<br>${fmt(d)}</span></div>`};
+  $('count').innerHTML=cd(16,'COPIL Go vague 1')+cd(21,'Kick-off')+cd(23,'Démarrage',1);
+  const base=DATA.filter(baseMatch);
+  const K=[['cours','En cours','var(--accent)',base.filter(r=>status(r)==='cours').length],
+    ['semaine',`Échéances d’ici le ${fmt(friday())}`,'var(--now)',base.filter(thisWeek).length],
+    ['retard','Échéances dépassées','var(--late)',base.filter(r=>status(r)==='retard').length],
+    ['fait','Faites','var(--done)',base.filter(r=>status(r)==='fait').length]];
+  $('kpis').innerHTML=K.map(([k,l,c,n])=>`<button class="kpi" data-k="${k}" style="--c:${c}" aria-pressed="${S.status===k}"><i></i><b>${n}</b><span>${l}</span></button>`).join('');
+  $('kpis').querySelectorAll('.kpi').forEach(b=>b.onclick=()=>{S.status=S.status===b.dataset.k?null:b.dataset.k;update()});
+  critBox.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===S.crit));
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===S.view));
+  const chips=$('chips');
+  chips.innerHTML=`<button class="chip" data-ch="" aria-pressed="${!S.chs.size}">Tous les chantiers</button>`+CHS.map(c=>{const n=DATA.filter(r=>r.ch===c).length;return `<button class="chip" data-ch="${esc(c)}" aria-pressed="${S.chs.has(c)}">${esc(c)}<small>${n}</small></button>`}).join('');
+  chips.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const c=b.dataset.ch;if(!c)S.chs.clear();else S.chs.has(c)?S.chs.delete(c):S.chs.add(c);update()});
+  $('reset').disabled=!(S.crit!=='Toutes'||S.q||S.porteur||S.chs.size||S.status);
+  $('foldAll').textContent=S.collapsed.size?'Tout déplier':'Tout replier';
+  $('ganttView').hidden=S.view!=='gantt';$('boardView').hidden=S.view!=='board';
+  $('zoomWrap').style.display=$('foldAll').style.display=S.view==='gantt'?'':'none';
 }
 
-const toneEcart = v => (v > 0 ? 'tone-red' : 'tone-green');
-const toneDelta = v => (v === 0 ? 'tone-muted' : v < 0 ? 'tone-green' : v < 5 ? 'tone-amber' : 'tone-red');
-
-/* Simulations d'arbitrage, gardées en mémoire pendant la session */
-const SIM = {};
-let currentEd = null;
-
-/* ---------- Thème ---------- */
-let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-function applyTheme() {
-  document.documentElement.dataset.theme = theme;
-  $('#themeBtn').setAttribute('aria-label', theme === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre');
-}
-$('#themeBtn').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; applyTheme(); });
-
-/* ---------- Composants partagés ---------- */
-function renderTopnav(active) {
-  const items = [['home', '#/', 'Sommaire'], ...INSTANCES.map(i => [i.id, '#/instance/' + i.id, i.court])];
-  $('#topnav').innerHTML = items.map(([id, href, label]) =>
-    `<a href="${href}"${id === active ? ' aria-current="page"' : ''}>${label}</a>`).join('');
+function renderHeader(n){
+  let days='';for(let d=0;d<N;d++){const t=dt(d);days+=`<span class="day${isWE(d)?' we':''}${d===S.T?' now':''}" data-d="${d}" title="Situation au ${fmtL(d)}"><em>${WD[t.getDay()][0].toUpperCase()}</em><b>${t.getDate()}</b></span>`}
+  const flags=EVENTS.map(e=>`<span class="flag${e.go?' go':''}" style="left:calc(var(--dw)*${e.d+(e.w||1)/2})">${e.l}</span>`).join('');
+  $('hd').innerHTML=`<div class="r hd"><div class="lc">${n} action${n>1?'s':''} affichée${n>1?'s':''}</div><div class="tc" id="dayStrip"><div class="wks">${[0,7,14,21].map(d=>`<span>Semaine du ${fmt(d)}</span>`).join('')}<span></span></div><div class="days">${days}</div><div class="evs">${flags}</div></div></div>`;
+  const strip=$('dayStrip');
+  const pick=e=>{const r=strip.getBoundingClientRect(),dw=r.width/N;setT(Math.floor((e.clientX-r.left)/dw))};
+  strip.onpointerdown=e=>{strip.setPointerCapture(e.pointerId);pick(e);strip.onpointermove=pick};
+  strip.onpointerup=strip.onpointercancel=()=>{strip.onpointermove=null};
 }
 
-const kpi = (label, value, sub, tone = '') =>
-  `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value num ${tone}">${value}</div><div class="kpi-sub">${sub}</div></div>`;
+function mark(r,i){
+  const tip=`data-id="${r.id}" style="--i:${i};`;
+  if(r.s===r.e){
+    const left=r.s>20;
+    return `<button class="dia" ${tip}left:calc(var(--dw)*${r.s+.5})" aria-label="${esc(r.id)}, jalon le ${fmt(r.s)}"></button><span class="lbl" style="${left?`right:calc(var(--dw)*${N-r.s-.5} + 13px)`:`left:calc(var(--dw)*${r.s+.5} + 13px)`}">${fmt(r.e)}</span>`}
+  const clip=r.e>=N,e=Math.min(r.e,N-1),len=e-r.s+1,txt=`${dt(r.s).getDate()} → ${fmt(r.e)}`,inside=len>=4;
+  let h=`<button class="bar${clip?' clip':''}" ${tip}left:calc(var(--dw)*${r.s});width:calc(var(--dw)*${len})" aria-label="${esc(r.id)}, du ${fmt(r.s)} au ${fmt(r.e)}">${inside?txt:''}</button>`;
+  if(!inside)h+=`<span class="lbl" style="${e<=19?`left:calc(var(--dw)*${e+1} + 6px)`:`right:calc(var(--dw)*${N-r.s} + 6px)`}">${txt}</span>`;
+  return h}
 
-function kpiStrip(ed, c, ctx) {
-  return `<div class="kpis">
-    ${kpi('Budget total', fmt(PROGRAMME.budgetTotal) + U, `enveloppes ${fmt(c.budget)} + contingence`)}
-    ${kpi('Atterrissage', fmt(c.att) + U, 'engagé + reste à faire', c.att > c.budget ? 'tone-red' : '')}
-    ${kpi('Écart vs enveloppes', signed(c.ecart) + U, `${signedPct(c.ecartPct)} · ${c.ecart > 0 ? 'Dépassement' : 'Sous les enveloppes'}`, toneEcart(c.ecart))}
-    ${kpi('Δ dernière séance', signed(c.delta, true) + U, ctx === 'dash' ? `vs ${esc(ed.delta.ref)}` : "évolution de l'atterrissage", toneDelta(c.delta))}
-    ${kpi('Contingence restante', fmt(ed.contingenceRestante) + U, 'réserve disponible pour couvrir les écarts')}
+function renderGantt(rows,intro){
+  renderHeader(rows.length);
+  let h='',ch=null,br=null,i=0;
+  rows.forEach(r=>{
+    if(r.ch!==ch){
+      ch=r.ch;br=null;
+      const all=rows.filter(x=>x.ch===ch),n=all.length,done=all.filter(x=>status(x)==='fait').length,late=all.filter(x=>status(x)==='retard').length;
+      const s=Math.min(...all.map(x=>x.s)),e=Math.min(N-1,Math.max(...all.map(x=>x.e)));
+      const open=!S.collapsed.has(ch);
+      h+=`<div class="r g"><div class="lc"><button class="gl" data-fold="${esc(ch)}" aria-expanded="${open}"><span class="chev">▼</span><strong>${esc(ch)}</strong><small>${n} action${n>1?'s':''}${done?`, ${done} faite${done>1?'s':''}`:''}${late?`, ${late} en retard`:''}</small><span class="prog"><i style="width:${done/n*100}%"></i><i class="l" style="width:${late/n*100}%"></i></span></button></div><div class="tc"><span class="env" style="left:calc(var(--dw)*${s});width:calc(var(--dw)*${e-s+1})"></span></div></div>`}
+    if(S.collapsed.has(ch))return;
+    if(r.br!==br){br=r.br;h+=`<div class="r sb"><div class="lc">${esc(br)}</div><div class="tc"></div></div>`}
+    const st=status(r);
+    h+=`<div class="r a st-${st}${S.sel===r.id?' sel':''}"><div class="lc"><button class="al" data-open="${r.id}"><span class="id">${esc(r.id)}</span><span class="tx">${esc(r.a)}</span><span class="meta">${st==='fait'?'<span class="tick">✓ Fait</span>':''}${r.p?`<span>${esc(r.p)}</span>`:''}${r.c?`<span class="crit ${r.c}">${r.c}</span>`:''}</span></button></div><div class="tc">${mark(r,i++)}</div></div>`});
+  if(!rows.length)h=`<div class="empty">Aucune action ne correspond à ces filtres.<br><button class="btn" onclick="document.getElementById('reset').click()">Réinitialiser les filtres</button></div>`;
+  const R=$('rows');R.innerHTML=h;
+  if(intro){R.classList.add('intro');setTimeout(()=>R.classList.remove('intro'),2400)}
+  $('ov').innerHTML=EVENTS.map(e=>e.w?`<i class="evband" style="left:calc(var(--lw) + var(--dw)*${e.d});width:calc(var(--dw)*${e.w})"></i>`:`<i class="evl" style="left:calc(var(--lw) + var(--dw)*${e.d+.5})"></i>`).join('');
+}
+
+function renderBoard(rows){
+  const W=[[0,6,'Semaine du 5 oct.'],[7,13,'Semaine du 12 oct.'],[14,20,'Semaine du 19 oct.'],[21,27,'Semaine du 26 oct.'],[28,999,'Novembre et après']];
+  $('board').innerHTML=W.map(([a,b,l])=>{
+    const list=rows.filter(r=>r.e>=a&&r.e<=b).sort((x,y)=>x.e-y.e||x.id.localeCompare(y.id));
+    const cur=S.T>=a&&S.T<=b;
+    return `<section class="col${cur?' cur':''}"><h3>${l}<small>${list.length}</small></h3><div class="list">${list.length?list.map(r=>{const st=status(r);return `<button class="card st-${st}" data-open="${r.id}"><span class="top"><span>${esc(r.id)} · ${esc(r.ch)}</span><span>${r.s===r.e?fmt(r.e):dt(r.s).getDate()+' → '+fmt(r.e)}</span></span><span class="t">${esc(r.a)}</span><span class="m">${esc(r.p)}${r.c?', criticité '+r.c.toLowerCase():''}</span><span class="badge">${ST[st]}</span></button>`}).join(''):'<p class="empty" style="padding:16px">Aucune échéance</p>'}</div></section>`}).join('');
+}
+
+/* Panneau */
+function openPanel(id){
+  const r=DATA.find(x=>x.id===id);if(!r)return;S.sel=id;
+  const st=status(r),dur=bdays(r.s,Math.min(r.e,N+40)),gap=r.e-S.T;
+  const when=st==='fait'?'Soldée':gap>0?`Échéance dans ${gap} jour${gap>1?'s':''}`:gap===0?'Échéance aujourd’hui':`Échéance dépassée de ${-gap} jour${gap<-1?'s':''}`;
+  const sib=DATA.filter(x=>x.br===r.br&&x.ch===r.ch);
+  const span=Math.max(N,r.e+1),pc=d=>d/span*100;
+  $('panel').innerHTML=`<div class="ph st-${st}"><button class="x" id="px" aria-label="Fermer">×</button><span class="crumb">${esc(r.id)} · ${esc(r.ch)} › ${esc(r.br)}</span><h2>${esc(r.a)}</h2><span><span class="status">${ST[st]}</span></span></div>
+  <div class="pb st-${st}">
+    <dl class="facts"><dt>Porteur</dt><dd>${esc(r.p)||'—'}</dd><dt>Criticité</dt><dd>${r.c?`<span class="crit ${r.c}">${r.c}</span>`:'Non renseignée'}</dd>
+    <dt>${r.s===r.e?'Date':'Début'}</dt><dd>${fmtL(r.s)}</dd>${r.s===r.e?'':`<dt>Fin</dt><dd>${fmtL(r.e)}</dd><dt>Durée</dt><dd>${dur} jour${dur>1?'s':''} ouvré${dur>1?'s':''}</dd>`}<dt>Au ${fmt(S.T)}</dt><dd>${when}</dd></dl>
+    <div><div class="mini">${r.s===r.e?`<i class="dia" style="left:${pc(r.s+.5)}%"></i>`:`<i class="bar" style="left:${pc(r.s)}%;width:${pc(r.e-r.s+1)}%"></i>`}<i class="t" style="left:${pc(S.T+.5)}%"></i></div><div class="mini-l"><span>5 oct.</span><span>${fmt(span-1)}</span></div></div>
+    <button class="doneBtn${S.done[id]?' on':''}" id="doneBtn">${S.done[id]?'Rouvrir l’action':'Marquer comme faite'}</button>
+    <div class="sib"><h4>${esc(r.br)} (${sib.length})</h4>${sib.map(x=>`<button class="st-${status(x)}${x.id===id?' me':''}" data-open="${x.id}"><i></i>${esc(x.a)}<span>${fmt(x.e)}</span></button>`).join('')}</div>
   </div>`;
+  $('panel').classList.add('open');$('panel').setAttribute('aria-hidden','false');$('scrim').classList.add('open');
+  $('px').onclick=closePanel;
+  $('doneBtn').onclick=()=>{if(S.done[id])delete S.done[id];else S.done[id]=1;saveDone();update();openPanel(id)};
+  document.querySelectorAll('.a.sel').forEach(e=>e.classList.remove('sel'));
+  const b=document.querySelector(`.al[data-open="${id}"]`);if(b)b.closest('.a').classList.add('sel');
 }
+function closePanel(){S.sel=null;$('panel').classList.remove('open');$('panel').setAttribute('aria-hidden','true');$('scrim').classList.remove('open');document.querySelectorAll('.a.sel').forEach(e=>e.classList.remove('sel'))}
+$('scrim').onclick=closePanel;
 
-function cbar(r) {
-  const max = Math.max(r.budget, r.att) * 1.04;
-  const wEng = r.eng / max * 100, wAtt = r.att / max * 100, wBud = r.budget / max * 100;
-  const over = r.att > r.budget ? `<span class="over" style="left:${wBud}%;width:${wAtt - wBud}%"></span>` : '';
-  return `<div class="cbar-wrap"><div class="cbar" style="flex:1" role="img" aria-label="Engagé ${fmt(r.eng)}, reste à faire ${fmt(r.raf)}, budget ${fmt(r.budget)} MMAD">
-      <div class="track"><span class="eng" style="width:${wEng}%"></span><span class="raf" style="left:${wEng}%;width:${wAtt - wEng}%"></span>${over}</div>
-      <span class="mark" style="left:${wBud}%"></span></div><span class="pct">${pf.format(r.att / r.budget)}</span></div>`;
-}
+/* Délégation : ouverture, repli, infobulle */
+document.addEventListener('click',e=>{
+  const f=e.target.closest('[data-fold]');if(f){const c=f.dataset.fold;S.collapsed.has(c)?S.collapsed.delete(c):S.collapsed.add(c);update();return}
+  const o=e.target.closest('[data-open],[data-id]');if(o&&!e.target.closest('#tip'))openPanel(o.dataset.open||o.dataset.id)});
+const tip=$('tip');
+document.addEventListener('pointerover',e=>{const t=e.target.closest('.tc [data-id]');if(!t){tip.classList.remove('on');return}
+  const r=DATA.find(x=>x.id===t.dataset.id);
+  tip.innerHTML=`<b>${esc(r.a)}</b><span>${esc(r.id)} · ${esc(r.p)} · ${r.s===r.e?fmt(r.s):fmt(r.s)+' → '+fmt(r.e)} · ${ST[status(r)]}</span>`;tip.classList.add('on')});
+document.addEventListener('pointermove',e=>{if(!tip.classList.contains('on'))return;const w=tip.offsetWidth,x=Math.min(e.clientX+14,innerWidth-w-8);tip.style.left=x+'px';tip.style.top=(e.clientY+16)+'px'});
+document.addEventListener('scroll',()=>tip.classList.remove('on'),true);
 
-const LVL_PLURIEL = { critique: 'Critiques', vigilance: 'Vigilance', info: 'Information' };
-const LVL = { critique: 'Critique', vigilance: 'Vigilance', info: 'Info' };
-const TYPE_DEMANDE = { contingence: 'Mobilisation de contingence', economie: 'Économie', phasage: 'Phasage entre exercices' };
-
-/* ---------- Sommaire ---------- */
-function instanceCard(inst) {
-  const eds = editionsOf(inst.id), ed = eds[0], c = calc(ed), n = eds.length;
-  return `<article class="icard ${c.statut.cls}">
-    <h3>${esc(inst.nom)}</h3>
-    <div class="chips"><span class="chip">${inst.frequence}</span><span class="chip">${inst.duree}</span><span class="chip">${n} édition${n > 1 ? 's' : ''}</span></div>
-    <p class="eyebrow label">Dernière édition</p>
-    <p class="edition">Séance du ${dLong(ed.date)}</p>
-    <span class="badge ${c.statut.cls}">${c.statut.txt}</span>
-    <p class="summary">${esc(ed.synthese)}</p>
-    <div class="minis">
-      <div class="mini"><div class="mini-label">Écart</div><div class="mini-value num ${toneEcart(c.ecart)}">${signed(c.ecart)}${U}</div></div>
-      <div class="mini"><div class="mini-label">Δ séance</div><div class="mini-value num ${toneDelta(c.delta)}">${signed(c.delta, true)}${U}</div></div>
-      <div class="mini"><div class="mini-label" title="Alertes critiques">Alertes critiques</div><div class="mini-value num ${c.crit ? 'tone-red' : 'tone-green'}">${c.crit}</div></div>
-    </div>
-    <div class="actions"><a class="btn-primary" href="${edHash(ed)}">Ouvrir le dashboard<span class="sr-only"> : ${esc(inst.court)} du ${dShort(ed.date)}</span> <span class="arrow" aria-hidden="true">→</span></a></div>
-    ${n > 1 ? `<div class="prev-eds"><span>Éditions précédentes</span>${eds.slice(1).map(e => `<a class="pill-link" href="${edHash(e)}">${dShort(e.date)}</a>`).join('')}</div>` : ''}
-  </article>`;
-}
-
-function renderHome() {
-  currentEd = null;
-  renderTopnav('home');
-  document.title = 'CBS One · Pilotage budgétaire';
-  const ed = latestOverall(), c = calc(ed), inst = instById(ed.instance);
-  const all = [...EDITIONS].sort(byRecent);
-  app.innerHTML = `
-  <div class="wrap page">
-    <p class="eyebrow">CBS One · Sommaire</p>
-    <h1 class="h1">Pilotage budgétaire du programme CBS One</h1>
-    <p class="lead">Trois instances, un même dispositif de contrôle. Chaque séance dispose de son dashboard, figé à sa date : ouvrez la dernière édition, ou revenez à une séance précédente.</p>
-
-    <div class="block-title">
-      <h2 class="eyebrow">Situation du programme · Séance du ${dShort(ed.date)} (${esc(inst.court)})</h2>
-      <a class="link-quiet" href="${edHash(ed)}">Voir le détail de cette séance</a>
-    </div>
-    ${kpiStrip(ed, c, 'home')}
-
-    <div class="block-title"><h2 class="eyebrow">Instances de pilotage</h2></div>
-    <div class="cards">${INSTANCES.map(instanceCard).join('')}</div>
-
-    <div class="block-title"><h2 class="eyebrow">Historique des séances</h2><span class="tone-muted" style="font-size:14.5px">${all.length} séances enregistrées</span></div>
-    <div class="panel"><div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>Séance</th><th>Instance</th><th class="r">Atterrissage</th><th class="r">Écart</th><th class="r">Δ séance</th><th class="r">Alertes critiques</th><th class="r"><span class="sr-only">Lien</span></th></tr></thead>
-      <tbody>${all.map(e => {
-        const cc = calc(e), i = instById(e.instance);
-        return `<tr class="clickable" data-href="${edHash(e)}">
-          <td class="cell-strong num">${dShort(e.date)}</td>
-          <td>${esc(i.nom)}</td>
-          <td class="r">${fmt(cc.att)}</td>
-          <td class="r cell-strong ${toneEcart(cc.ecart)}">${signed(cc.ecart)}</td>
-          <td class="r ${toneDelta(cc.delta)}">${signed(cc.delta, true)}</td>
-          <td class="r ${cc.crit ? 'tone-red' : ''}">${cc.crit}</td>
-          <td class="r"><a class="link-quiet" href="${edHash(e)}">Ouvrir</a></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div></div>
-  </div>`;
-}
-
-/* ---------- Sections du dashboard ---------- */
-const SECTIONS = {
-  synthese(ed, c) {
-    const p = c.pire;
-    return `<section class="dsec" id="synthese">
-      <div class="dsec-head"><div><h2>Synthèse</h2><p>Message porté en séance.</p></div></div>
-      <div class="panel synth">
-        <div class="synth-main">
-          <p class="synth-text">${esc(ed.synthese)}</p>
-          <ul class="msgs">${ed.messages.map(m => `<li>${esc(m)}</li>`).join('')}</ul>
-        </div>
-        <aside class="synth-side" aria-label="Lecture rapide">
-          <div><div class="stat-label">Engagé</div><div class="stat-value num">${fmt(c.eng)}${U}</div><div class="stat-sub">${pf.format(c.eng / c.att)} de l'atterrissage</div></div>
-          <div><div class="stat-label">Reste à faire</div><div class="stat-value num">${fmt(c.raf)}${U}</div><div class="stat-sub">à engager d'ici la fin du programme</div></div>
-          <div><div class="stat-label">Enveloppes en dépassement</div><div class="stat-value num">${c.enDepassement} sur ${c.rows.length}</div></div>
-          <div><div class="stat-label">Plus forte dérive</div><div class="stat-value"><button type="button" class="link-btn" data-env="${p.id}">${esc(p.nom)}</button></div><div class="stat-sub tone-red num">${signed(p.ecart)} MMAD vs budget</div></div>
-        </aside>
-      </div>
-    </section>`;
-  },
-
-  enveloppes(ed, c) {
-    const th = (k, label, cls = '') =>
-      `<th class="${cls}" data-k="${k}" aria-sort="none"><button class="sort-btn" type="button" data-sort="${k}">${label}<span class="ind" aria-hidden="true">▼</span></button></th>`;
-    return `<section class="dsec" id="enveloppes">
-      <div class="dsec-head">
-        <div><h2>Atterrissage par enveloppe</h2><p>Sélectionnez une enveloppe pour afficher son détail. Les colonnes sont triables.</p></div>
-        <div class="legend"><span><i class="l-eng"></i>Engagé</span><span><i class="l-raf"></i>Reste à faire</span><span><i class="l-over"></i>Au-delà du budget</span><span><i class="l-mark"></i>Budget</span></div>
-      </div>
-      <div class="panel"><div class="tbl-wrap"><table class="tbl" id="envTable">
-        <thead><tr>${th('nom', 'Enveloppe')}${th('budget', 'Budget', 'r')}${th('eng', 'Engagé', 'r')}${th('raf', 'Reste à faire', 'r')}${th('att', 'Atterrissage', 'r')}${th('ecart', 'Écart', 'r')}${th('delta', 'Δ séance', 'r')}<th style="min-width:220px">Atterrissage / budget</th></tr></thead>
-        <tbody></tbody>
-        <tfoot><tr>
-          <td>Total enveloppes</td><td class="r">${fmt(c.budget)}</td><td class="r">${fmt(c.eng)}</td><td class="r">${fmt(c.raf)}</td><td class="r">${fmt(c.att)}</td>
-          <td class="r ${toneEcart(c.ecart)}">${signed(c.ecart)}</td><td class="r ${toneDelta(c.delta)}">${signed(c.delta)}</td>
-          <td><span class="tone-muted" style="font-weight:700">${pf.format(c.att / c.budget)} du total des enveloppes</span></td>
-        </tr></tfoot>
-      </table></div></div>
-    </section>`;
-  },
-
-  trajectoire(ed, c) {
-    return `<section class="dsec" id="trajectoire">
-      <div class="dsec-head">
-        <div><h2>Trajectoire de l'atterrissage</h2><p>Atterrissage consolidé à chaque séance, comparé au total des enveloppes.</p></div>
-        <div class="legend"><span><i class="l-line"></i>Atterrissage</span><span><i class="l-dash"></i>Total des enveloppes</span></div>
-      </div>
-      <div class="panel pad">
-        <div class="chart" id="trajChart"></div>
-        <div class="chart-foot">
-          <span>Plafond du budget total, contingence comprise : <b class="num" style="color:var(--ink)">${fmt(PROGRAMME.budgetTotal)} MMAD</b></span>
-          <span>Marge après couverture de l'écart : <b class="num tone-green">${fmt(c.marge)} MMAD</b></span>
-        </div>
-      </div>
-    </section>`;
-  },
-
-  phasage(ed) {
-    if (!ed.phasage) return '';
-    return `<section class="dsec" id="phasage">
-      <div class="dsec-head">
-        <div><h2>Phasage par exercice</h2><p>Atterrissage annuel comparé à l'enveloppe de chaque exercice.</p></div>
-        <div class="seg" role="group" aria-label="Scénario de phasage">
-          <button type="button" data-phase="avecReport" aria-pressed="true">Avec le report en 2027</button>
-          <button type="button" data-phase="sansReport" aria-pressed="false">Sans report</button>
-        </div>
-      </div>
-      <div class="panel pad">
-        <div class="legend" style="margin-bottom:28px"><span><i class="l-budget"></i>Enveloppe de l'exercice</span><span><i class="l-att"></i>Atterrissage</span><span><i class="l-att-over"></i>Atterrissage au-delà de l'enveloppe</span></div>
-        <div class="phase" id="phaseBars"></div>
-        <div class="phase-labels" id="phaseLabels"></div>
-        <div class="chart-foot" id="phaseNote"></div>
-      </div>
-    </section>`;
-  },
-
-  contingence(ed, c, inst) {
-    const titre = inst.id === 'hebdo' ? "Contingence et demandes d'arbitrage" : 'Contingence et décisions attendues';
-    const attente = ed.demandes.filter(d => d[1] === 'attente').length;
-    return `<section class="dsec" id="contingence">
-      <div class="dsec-head">
-        <div><h2>${titre}</h2><p>${attente ? `Simulez les décisions en attente pour voir leur effet sur la contingence. Les chiffres figés de la séance ne changent pas.` : 'Aucune décision en attente.'}</p></div>
-        <div class="legend"><span><i class="l-used"></i>Mobilisée</span><span><i class="l-gap"></i>Écart à couvrir</span><span><i class="l-free"></i>Marge disponible</span></div>
-      </div>
-      <div class="panel pad">
-        <div class="cont-cells" id="contCells"></div>
-        <div id="contStacks">
-          <div class="stack-row" id="stackBase"><span class="stack-label">Séance du ${dTiny(ed.date)}</span><div class="stack"><span class="s-used"></span><span class="s-gap"></span><span class="s-free"></span></div></div>
-          <div class="stack-row" id="stackSim" hidden><span class="stack-label">Après simulation</span><div class="stack"><span class="s-used"></span><span class="s-gap"></span><span class="s-free"></span></div></div>
-        </div>
-        <div class="sim-note" id="simNote" hidden></div>
-        <div class="req-list">${ed.demandes.map(reqItem).join('')}</div>
-      </div>
-    </section>`;
-  },
-
-  alertes(ed, c) {
-    const n = { critique: 0, vigilance: 0, info: 0 };
-    ed.alertes.forEach(a => n[a[1]]++);
-    return `<section class="dsec" id="alertes">
-      <div class="dsec-head">
-        <div><h2>Alertes</h2><p>${c.crit} critique${c.crit > 1 ? 's' : ''} sur ${ed.alertes.length} alertes suivies à cette séance.</p></div>
-        <div class="filters" role="group" aria-label="Filtrer les alertes">
-          <button type="button" class="fchip" data-filter="all" aria-pressed="true">Toutes (${ed.alertes.length})</button>
-          ${['critique', 'vigilance', 'info'].filter(k => n[k]).map(k => `<button type="button" class="fchip" data-filter="${k}" aria-pressed="false">${LVL_PLURIEL[k]} (${n[k]})</button>`).join('')}
-        </div>
-      </div>
-      <div class="panel" style="padding:4px 32px"><div id="alertList">${ed.alertes.map(alertItem).join('')}</div></div>
-    </section>`;
-  }
-};
-
-function reqItem([id, statut, echeance]) {
-  const d = DEMANDES[id], e = envById(d.env);
-  const fige = statut === 'attente' ? '' : `<span class="tag ${statut === 'validee' ? 'green' : 'red'}">${statut === 'validee' ? 'Validée' : 'Refusée'} en séance</span>`;
-  const montant = (d.type === 'economie' ? '−' : '') + fmt(d.montant);
-  return `<div class="req" data-req="${id}">
-    <div>
-      <div class="req-top"><span class="req-id">${d.ref}</span><span class="tag">${TYPE_DEMANDE[d.type]}</span>${fige}</div>
-      <p class="req-title">${esc(d.titre)}</p>
-      <div class="req-meta">
-        <span>Enveloppe <button type="button" class="link-btn" data-env="${e.id}"><b>${esc(e.nom)}</b></button></span>
-        <span>Demandeur <b>${esc(d.demandeur)}</b></span>
-        <span>Échéance <b>${esc(echeance)}</b></span>
-      </div>
-    </div>
-    <div class="req-side">
-      <div class="req-amount ${d.type === 'economie' ? 'tone-green' : ''}">${montant}${U}</div>
-      ${statut === 'attente' ? `<div class="decide" role="group" aria-label="Simuler la décision ${d.ref}">
-        <button type="button" class="ok" data-decide="validee" data-id="${id}" aria-pressed="false">Valider</button>
-        <button type="button" class="ko" data-decide="refusee" data-id="${id}" aria-pressed="false">Refuser</button>
-      </div>` : ''}
-    </div>
-  </div>`;
-}
-
-function alertItem([id, niveau, impact]) {
-  const a = ALERTES[id], e = envById(a.env);
-  return `<article class="alert" data-level="${niveau}">
-    <span class="lvl ${niveau}">${LVL[niveau]}</span>
-    <div>
-      <h3>${esc(a.titre)}</h3>
-      <p>${esc(a.texte)}</p>
-      <div class="req-meta">
-        <span>Enveloppe <button type="button" class="link-btn" data-env="${e.id}"><b>${esc(e.nom)}</b></button></span>
-        <span>Porteur <b>${esc(a.porteur)}</b></span>
-        <span>Échéance <b>${dShort(a.echeance)}</b></span>
-      </div>
-    </div>
-    <div class="alert-impact ${impact > 0 ? 'tone-red' : 'tone-green'}">${signed(impact)}${U}<small>impact estimé</small></div>
-  </article>`;
-}
-
-/* ---------- Dashboard ---------- */
-function renderDashboard(ed) {
-  currentEd = ed;
-  const inst = instById(ed.instance), c = calc(ed);
-  const eds = editionsOf(inst.id), i = eds.indexOf(ed), older = eds[i + 1], newer = eds[i - 1];
-  renderTopnav(inst.id);
-  document.title = `${inst.court} du ${dShort(ed.date)} · CBS One`;
-
-  const libelles = { synthese: 'Synthèse', enveloppes: 'Enveloppes', trajectoire: 'Trajectoire', phasage: 'Phasage', contingence: inst.libelleDecisions, alertes: 'Alertes' };
-  const compteurs = { alertes: c.crit, contingence: ed.demandes.filter(d => d[1] === 'attente').length };
-  const navBtn = (target, icon, label) => target
-    ? `<a class="icon-btn" href="${edHash(target)}" aria-label="${label} : ${dShort(target.date)}" title="${label} (${dShort(target.date)})">${icon}</a>`
-    : `<a class="icon-btn" aria-disabled="true" aria-label="${label} : aucune">${icon}</a>`;
-
-  app.innerHTML = `
-  <div class="wrap page">
-    <nav class="crumbs eyebrow" aria-label="Fil d'Ariane"><a href="#/">CBS One · Sommaire</a><span class="sep" aria-hidden="true">/</span><span aria-current="page">${esc(inst.court)}</span></nav>
-    <div class="dash-head">
-      <div>
-        <h1 class="h1">${esc(inst.nom)}</h1>
-        <div class="edition-line"><span class="when">Séance du ${dLong(ed.date)}</span><span class="badge ${c.statut.cls}">${c.statut.txt}</span></div>
-        <div class="chips"><span class="chip">${inst.frequence}</span><span class="chip">${inst.duree}</span><span class="chip">Figé au ${dShort(ed.date)}</span></div>
-      </div>
-      <div class="switcher" title="Astuce : les flèches ← → du clavier changent d'édition">
-        <span class="switcher-label">Éditions</span>
-        ${navBtn(older, ICON.prev, 'Édition précédente')}
-        <div class="seg">${eds.slice().reverse().map(e => `<a href="${edHash(e)}"${e === ed ? ' aria-current="page"' : ''}>${dTiny(e.date)}</a>`).join('')}</div>
-        ${navBtn(newer, ICON.next, 'Édition suivante')}
-        <button class="btn-ghost" type="button" data-action="print">${ICON.print} Imprimer</button>
-      </div>
-    </div>
-
-    <div class="dash-kpis">${kpiStrip(ed, c, 'dash')}</div>
-
-    <nav class="subnav" aria-label="Sections du dashboard"><div class="subnav-inner">
-      ${inst.sections.map(s => `<button type="button" data-target="${s}">${libelles[s]}${compteurs[s] ? `<span class="count${s === 'contingence' ? ' n' : ''}">${compteurs[s]}</span>` : ''}</button>`).join('')}
-    </div></nav>
-
-    ${inst.sections.map(s => SECTIONS[s](ed, c, inst)).join('')}
-
-    <section class="dsec others-block">
-      <div class="dsec-head"><div><h2>Autres instances</h2></div></div>
-      <div class="others">${INSTANCES.filter(x => x.id !== inst.id).map(x => {
-        const e = latestOf(x.id), cc = calc(e);
-        return `<a class="panel other" href="${edHash(e)}"><div><strong>${esc(x.nom)}</strong><span>Séance du ${dShort(e.date)}, écart ${signed(cc.ecart)} MMAD</span></div><span class="go" aria-hidden="true">→</span></a>`;
-      }).join('')}</div>
-    </section>
-  </div>`;
-
-  mountDashboard(ed, c);
-}
-
-function mountDashboard(ed, c) {
-  /* Tableau des enveloppes */
-  if ($('#envTable')) {
-    let sort = { k: null, dir: null };
-    renderEnvRows(c, sort);
-    $('#envTable thead').addEventListener('click', e => {
-      const b = e.target.closest('[data-sort]'); if (!b) return;
-      const k = b.dataset.sort;
-      const dir = sort.k === k ? (sort.dir === 'desc' ? 'asc' : 'desc') : (k === 'nom' ? 'asc' : 'desc');
-      sort = { k, dir };
-      $$('#envTable th[data-k]').forEach(th => {
-        const on = th.dataset.k === k, sb = $('.sort-btn', th);
-        th.setAttribute('aria-sort', on ? (dir === 'asc' ? 'ascending' : 'descending') : 'none');
-        if (on) { sb.dataset.dir = dir; $('.ind', sb).textContent = dir === 'asc' ? '▲' : '▼'; } else delete sb.dataset.dir;
-      });
-      renderEnvRows(c, sort);
-    });
-  }
-
-  /* Trajectoire */
-  const tc = $('#trajChart');
-  if (tc) {
-    drawTrajectory(tc, ed, !reduceMotion.matches);
-    watchResize(tc, () => drawTrajectory(tc, ed, false));
-    const show = h => showTip(tc, +h.dataset.i);
-    tc.addEventListener('pointerover', e => { const h = e.target.closest('.hit'); if (h) show(h); });
-    tc.addEventListener('pointerout', e => { if (e.target.closest('.hit')) hideTip(tc); });
-    tc.addEventListener('focusin', e => { const h = e.target.closest('.hit'); if (h) show(h); });
-    tc.addEventListener('focusout', () => hideTip(tc));
-  } else watchResize(null);
-
-  /* Phasage */
-  if ($('#phaseBars')) {
-    const sim = SIM[edKey(ed)] || {};
-    const d6 = ed.demandes.find(d => DEMANDES[d[0]].type === 'phasage');
-    setPhase(d6 && sim[d6[0]] === 'refusee' ? 'sansReport' : 'avecReport');
-  }
-
-  /* Contingence et simulation */
-  if ($('#contCells')) {
-    const sim = SIM[edKey(ed)] || {};
-    $$('[data-decide]').forEach(b => b.setAttribute('aria-pressed', String(sim[b.dataset.id] === b.dataset.decide)));
-    renderCont(ed, c);
-  }
-
-  setupSpy();
-}
-
-function renderEnvRows(c, sort) {
-  const rows = [...c.rows];
-  if (sort.k) {
-    rows.sort((a, b) => (sort.k === 'nom' ? a.nom.localeCompare(b.nom, 'fr') : a[sort.k] - b[sort.k]));
-    if (sort.dir === 'desc') rows.reverse();
-  }
-  $('#envTable tbody').innerHTML = rows.map(r => `
-    <tr class="clickable" tabindex="0" data-env="${r.id}">
-      <td><span class="env-name">${esc(r.nom)}</span><span class="env-owner">${esc(r.porteur)}</span></td>
-      <td class="r">${fmt(r.budget)}</td>
-      <td class="r">${fmt(r.eng)}</td>
-      <td class="r">${fmt(r.raf)}</td>
-      <td class="r cell-strong">${fmt(r.att)}</td>
-      <td class="r cell-strong ${r.ecart > 0 ? 'tone-red' : r.ecart < 0 ? 'tone-green' : ''}">${signed(r.ecart)}</td>
-      <td class="r ${toneDelta(r.delta)}">${r.delta ? signed(r.delta) : '—'}</td>
-      <td>${cbar(r)}</td>
-    </tr>`).join('');
-}
-
-/* ---------- Graphique de trajectoire ---------- */
-function trajPoints(ed) {
-  const pts = HISTORIQUE.filter(h => h.date < ed.date).map(h => ({ ...h }));
-  editionsOf(ed.instance).filter(e => e.date < ed.date).forEach(e => {
-    const p = { date: e.date, att: calc(e).att, source: instById(e.instance).court };
-    const k = pts.findIndex(x => x.date === e.date);
-    if (k >= 0) pts[k] = p; else pts.push(p);
-  });
-  pts.push({ date: ed.date, att: calc(ed).att, source: 'Cette séance', current: true });
-  return pts.sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function drawTrajectory(el, ed, animate) {
-  const pts = trajPoints(ed), env = calc(ed).budget;
-  const W = Math.max(300, el.clientWidth), small = W < 640, H = small ? 250 : 320;
-  const m = { t: 34, r: small ? 14 : 24, b: 40, l: 46 };
-  const vals = pts.map(p => p.att).concat(env), step = 10;
-  const lo = Math.floor((Math.min(...vals) - 4) / step) * step;
-  const hi = Math.ceil((Math.max(...vals) + 6) / step) * step;
-  const ts = pts.map(p => toDate(p.date).getTime()), t0 = ts[0], t1 = ts[ts.length - 1];
-  const X = t => m.l + (t1 === t0 ? 0.5 : (t - t0) / (t1 - t0)) * (W - m.l - m.r);
-  const Y = v => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b);
-  const xy = pts.map((p, i) => [X(ts[i]), Y(p.att)]);
-  const yEnv = Y(env);
-
-  let grid = '';
-  for (let v = lo; v <= hi; v += step) {
-    grid += `<line class="gridline" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axis" x="${m.l - 10}" y="${Y(v) + 4}" text-anchor="end">${nf0.format(v)}</text>`;
-  }
-  const line = xy.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('');
-  const area = `M${xy[0][0]},${yEnv}` + xy.map(p => `L${p[0]},${p[1]}`).join('') + `L${xy[xy.length - 1][0]},${yEnv}Z`;
-  let len = 0;
-  for (let i = 1; i < xy.length; i++) len += Math.hypot(xy[i][0] - xy[i - 1][0], xy[i][1] - xy[i - 1][1]);
-
-  const showLabel = i => !small || i === 0 || i === pts.length - 1 || i % 2 === 0;
-  const xLabels = pts.map((p, i) => showLabel(i)
-    ? `<text class="axis" x="${xy[i][0]}" y="${H - 12}" text-anchor="${i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle'}">${dTiny(p.date)}</text>` : '').join('');
-  const dots = pts.map((p, i) => `<g class="pt">
-      <circle class="hit" cx="${xy[i][0]}" cy="${xy[i][1]}" r="16" tabindex="0" data-i="${i}" role="img" aria-label="${dShort(p.date)}, ${esc(p.source)} : ${fmt(p.att)} MMAD"/>
-      <circle class="dot${p.current ? ' last' : ''}" cx="${xy[i][0]}" cy="${xy[i][1]}" r="${p.current ? 6.5 : 5}" style="pointer-events:none"/>
-    </g>`).join('');
-  const last = xy[xy.length - 1];
-
-  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-label="Trajectoire de l'atterrissage">
-      <defs><clipPath id="clipAbove"><rect x="0" y="0" width="${W}" height="${Math.max(0, yEnv)}"/></clipPath></defs>
-      ${grid}
-      <path class="area" d="${area}" clip-path="url(#clipAbove)"/>
-      <line class="env-line" x1="${m.l}" x2="${W - m.r}" y1="${yEnv}" y2="${yEnv}"/>
-      <text class="env-label" x="${W - m.r}" y="${yEnv + 20}" text-anchor="end">Enveloppes ${fmt(env)}</text>
-      <path class="line${animate ? ' draw' : ''}" d="${line}" style="stroke-dasharray:${len};--len:${len}"/>
-      ${dots}${xLabels}
-      <text class="val" x="${last[0]}" y="${last[1] - 16}" text-anchor="end">${fmt(pts[pts.length - 1].att)}</text>
-    </svg><div class="tip" aria-hidden="true"></div>`;
-  el._pts = pts; el._xy = xy; el._env = env; el._w = W;
-}
-
-function showTip(el, i) {
-  const p = el._pts[i], [x, y] = el._xy[i], tip = $('.tip', el);
-  tip.innerHTML = `<b>${dShort(p.date)}</b>, ${esc(p.source)}<br>Atterrissage <b>${fmt(p.att)} MMAD</b><br>Écart vs enveloppes <b>${signed(p.att - el._env)}</b>`;
-  tip.style.left = Math.min(Math.max(x, 120), el._w - 120) + 'px';
-  tip.style.top = y + 'px';
-  tip.classList.add('show');
-}
-const hideTip = el => $('.tip', el)?.classList.remove('show');
-
-let resizeObs = null;
-function watchResize(el, fn) {
-  resizeObs?.disconnect(); resizeObs = null;
-  if (!el || !('ResizeObserver' in window)) return;
-  let w = el.clientWidth;
-  resizeObs = new ResizeObserver(() => { if (Math.abs(el.clientWidth - w) > 4) { w = el.clientWidth; fn(); } });
-  resizeObs.observe(el);
-}
-
-/* ---------- Phasage ---------- */
-function setPhase(scen) {
-  $$('[data-phase]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.phase === scen)));
-  const ph = currentEd.phasage, years = Object.keys(ph.budget), cur = ph[scen];
-  const max = Math.max(...years.flatMap(y => [ph.budget[y], ph.avecReport[y], ph.sansReport[y]])) * 1.14;
-  const wrap = $('#phaseBars');
-  if (!wrap.children.length) {
-    wrap.innerHTML = years.map(y => `<div class="phase-col">
-      <div class="pbar budget" data-y="${y}" style="height:0"><span class="pv"></span></div>
-      <div class="pbar att" data-y="${y}" style="height:0"><span class="pv"></span></div></div>`).join('');
-    void wrap.offsetHeight;
-  }
-  years.forEach(y => {
-    const b = $(`.pbar.budget[data-y="${y}"]`, wrap), a = $(`.pbar.att[data-y="${y}"]`, wrap);
-    b.style.height = (ph.budget[y] / max * 100) + '%'; $('.pv', b).textContent = fmt(ph.budget[y]);
-    a.style.height = (cur[y] / max * 100) + '%'; $('.pv', a).textContent = fmt(cur[y]);
-    a.classList.toggle('over', cur[y] > ph.budget[y] + 0.05);
-  });
-  $('#phaseLabels').innerHTML = years.map(y => {
-    const d = r1(cur[y] - ph.budget[y]);
-    return `<div><strong>${y}</strong><span class="${d > 0 ? 'tone-red' : 'tone-green'}">${signed(d)} MMAD vs enveloppe</span></div>`;
-  }).join('');
-  const pire = years.reduce((a, y) => (cur[y] - ph.budget[y] > cur[a] - ph.budget[a] ? y : a), years[0]);
-  const dp = fmt(cur[pire] - ph.budget[pire]);
-  const report = fmt(Math.abs(ph.sansReport[2026] - ph.avecReport[2026]));
-  $('#phaseNote').innerHTML = scen === 'avecReport'
-    ? `<span>Avec le report de ${report} MMAD, l'exercice ${pire} dépasse son enveloppe de <b class="tone-red">${dp} MMAD</b> : écart d'exercice à valider.</span><span>Total inchangé : ${fmt(years.reduce((s, y) => s + cur[y], 0))} MMAD</span>`
-    : `<span>Sans report, l'exercice ${pire} dépasse son enveloppe de <b class="tone-red">${dp} MMAD</b>.</span><span>Total inchangé : ${fmt(years.reduce((s, y) => s + cur[y], 0))} MMAD</span>`;
-}
-
-/* ---------- Contingence et simulation ---------- */
-function contState(ed, c, sim) {
-  let mob = 0, eco = 0, nVal = 0, nRef = 0;
-  ed.demandes.forEach(([id, statut]) => {
-    if (statut !== 'attente') return;
-    const d = DEMANDES[id], s = sim[id];
-    if (s === 'refusee') nRef++;
-    if (s === 'validee') {
-      nVal++;
-      if (d.type === 'contingence') mob += d.montant;
-      else if (d.type === 'economie') eco += d.montant;
-    }
-  });
-  const deja = r1(PROGRAMME.contingenceInitiale - ed.contingenceRestante);
-  const rest = r1(ed.contingenceRestante - mob), ecart = r1(c.ecart - mob - eco);
-  return { init: PROGRAMME.contingenceInitiale, deja, mob: r1(mob), eco: r1(eco), used: r1(deja + mob), rest, ecart, marge: r1(rest - ecart), nVal, nRef };
-}
-
-function setStack(row, st) {
-  const parts = [st.used, Math.max(0, st.ecart), Math.max(0, st.marge)];
-  const tot = parts.reduce((a, b) => a + b, 0) || 1;
-  const spans = $$('.stack span', row);
-  spans.forEach((s, i) => { s.style.width = (parts[i] / tot * 100).toFixed(2) + '%'; });
-  $('.stack', row).setAttribute('role', 'img');
-  $('.stack', row).setAttribute('aria-label', `Mobilisée ${fmt(st.used)}, écart à couvrir ${fmt(parts[1])}, marge ${fmt(st.marge)} MMAD`);
-}
-
-function renderCont(ed, c) {
-  const sim = SIM[edKey(ed)] || {};
-  const base = contState(ed, c, {}), s = contState(ed, c, sim);
-  const actif = s.nVal + s.nRef > 0;
-  const cell = (label, v, sub, tone = '') =>
-    `<div class="cont-cell"><div class="stat-label">${label}</div><div class="stat-value num ${tone}">${fmt(v)}${U}</div><div class="stat-sub">${sub}</div></div>`;
-  $('#contCells').innerHTML =
-    cell('Contingence initiale', s.init, 'au lancement du programme') +
-    cell('Déjà mobilisée', s.used, actif && s.mob ? `dont ${fmt(s.mob)} simulés` : 'arbitrages antérieurs') +
-    cell('Contingence restante', s.rest, actif ? `figé : ${fmt(base.rest)}` : 'disponible à date') +
-    cell('Écart à couvrir', Math.max(0, s.ecart), actif ? `figé : ${fmt(base.ecart)}` : 'atterrissage − enveloppes', s.ecart > 0 ? 'tone-red' : 'tone-green') +
-    cell('Marge après couverture', s.marge, actif && s.eco ? `dont ${fmt(s.eco)} d'économies simulées` : 'restante − écart à couvrir', 'tone-green');
-
-  const baseRow = $('#stackBase'), simRow = $('#stackSim');
-  setStack(baseRow, base);
-  if (actif) {
-    const etaitCache = simRow.hidden;
-    simRow.hidden = false;
-    if (etaitCache) { setStack(simRow, base); void simRow.offsetWidth; }
-    setStack(simRow, s);
-  } else simRow.hidden = true;
-
-  const note = $('#simNote');
-  if (actif) {
-    const parts = [];
-    if (s.nVal) parts.push(`${s.nVal} validée${s.nVal > 1 ? 's' : ''}`);
-    if (s.nRef) parts.push(`${s.nRef} refusée${s.nRef > 1 ? 's' : ''}`);
-    note.innerHTML = `<span><b>Simulation en cours</b> (${parts.join(', ')}) : écart vs enveloppes <b class="num">${signed(s.ecart)} MMAD</b>, contingence restante <b class="num">${fmt(s.rest)} MMAD</b>.</span>
-      <button type="button" class="btn-ghost" data-action="reset-sim">Réinitialiser la simulation</button>`;
-    note.hidden = false;
-  } else note.hidden = true;
-}
-
-function decide(id, val) {
-  const k = edKey(currentEd), sim = SIM[k] || (SIM[k] = {});
-  if (sim[id] === val) delete sim[id]; else sim[id] = val;
-  $$(`[data-decide][data-id="${id}"]`).forEach(b => b.setAttribute('aria-pressed', String(sim[id] === b.dataset.decide)));
-  renderCont(currentEd, calc(currentEd));
-  const d = DEMANDES[id];
-  if (d.type === 'phasage' && $('#phaseBars')) setPhase(sim[id] === 'refusee' ? 'sansReport' : 'avecReport');
-  toast(sim[id] ? `${d.ref} ${sim[id] === 'validee' ? 'validée' : 'refusée'} dans la simulation` : `${d.ref} remise en attente`);
-}
-
-function resetSim() {
-  delete SIM[edKey(currentEd)];
-  $$('[data-decide]').forEach(b => b.setAttribute('aria-pressed', 'false'));
-  renderCont(currentEd, calc(currentEd));
-  if ($('#phaseBars')) setPhase('avecReport');
-  toast('Simulation réinitialisée');
-}
-
-function filterAlerts(f) {
-  $$('[data-filter]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === f)));
-  $$('#alertList .alert').forEach(a => { a.hidden = f !== 'all' && a.dataset.level !== f; });
-}
-
-/* ---------- Navigation dans les sections ---------- */
-let spySecs = [], spyBtns = [];
-function setupSpy() {
-  spyBtns = $$('.subnav [data-target]');
-  spySecs = spyBtns.map(b => document.getElementById(b.dataset.target)).filter(Boolean);
-  spy();
-}
-function spy() {
-  if (!spySecs.length) return;
-  const off = $('.topbar').offsetHeight + 90;
-  let cur = spySecs[0];
-  spySecs.forEach(s => { if (s.getBoundingClientRect().top - off <= 0) cur = s; });
-  if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur = spySecs[spySecs.length - 1];
-  spyBtns.forEach(b => {
-    const on = b.dataset.target === cur.id;
-    if (on && !b.classList.contains('active')) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    b.classList.toggle('active', on);
-  });
-}
-let spyRaf = 0;
-addEventListener('scroll', () => { if (!spyRaf) spyRaf = requestAnimationFrame(() => { spyRaf = 0; spy(); }); }, { passive: true });
-
-function scrollToSec(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
-}
-
-/* ---------- Panneau de détail d'une enveloppe ---------- */
-let lastFocus = null;
-const drawer = $('#drawer'), overlay = $('#overlay');
-
-function renderDrawer(envId) {
-  const ed = currentEd, c = calc(ed), rows = c.rows, i = rows.findIndex(r => r.id === envId), r = rows[i];
-  const prev = rows[(i - 1 + rows.length) % rows.length], next = rows[(i + 1) % rows.length];
-  const als = ed.alertes.filter(a => ALERTES[a[0]].env === envId);
-  const dms = ed.demandes.filter(d => DEMANDES[d[0]].env === envId);
-  drawer.innerHTML = `
-    <div class="drawer-head">
-      <div><p class="eyebrow">Enveloppe · séance du ${dShort(ed.date)}</p><h2 id="drawerTitle">${esc(r.nom)}</h2><span class="tone-muted">${esc(r.porteur)}</span></div>
-      <button class="icon-btn" id="drawerClose" type="button" aria-label="Fermer le détail">${ICON.close}</button>
-    </div>
-    <div class="drawer-body">
-      <div class="stat-label">Atterrissage</div>
-      <div class="d-big"><span class="v num ${r.ecart > 0 ? 'tone-red' : ''}">${fmt(r.att)}${U}</span><span class="badge ${r.ecart > 0 ? '' : 'ok'}">${signed(r.ecart)} MMAD vs budget</span></div>
-      <div class="d-grid">
-        <div><div class="stat-label">Budget</div><div class="stat-value num">${fmt(r.budget)}${U}</div></div>
-        <div><div class="stat-label">Engagé</div><div class="stat-value num">${fmt(r.eng)}${U}</div><div class="stat-sub">${pf.format(r.eng / r.att)} de l'atterrissage</div></div>
-        <div><div class="stat-label">Reste à faire</div><div class="stat-value num">${fmt(r.raf)}${U}</div></div>
-        <div><div class="stat-label">Δ séance</div><div class="stat-value num ${toneDelta(r.delta)}">${r.delta ? signed(r.delta) : '0,0'}${U}</div><div class="stat-sub">vs ${esc(ed.delta.ref)}</div></div>
-      </div>
-      <div class="d-sec"><h3>Consommation</h3>${cbar(r)}
-        <div class="legend" style="margin-top:12px;font-size:13px"><span><i class="l-eng"></i>Engagé</span><span><i class="l-raf"></i>Reste à faire</span><span><i class="l-mark"></i>Budget</span></div></div>
-      <div class="d-sec"><h3>Commentaire du porteur</h3><p>${esc(COMMENTAIRES[r.id] || '')}</p></div>
-      <div class="d-sec"><h3>Alertes liées</h3>${als.length ? als.map(([id, niv, imp]) => `
-        <div class="d-item"><span class="lvl ${niv}">${LVL[niv]}</span><strong>${esc(ALERTES[id].titre)}</strong><span>Impact estimé ${signed(imp)} MMAD, échéance ${dShort(ALERTES[id].echeance)}</span></div>`).join('')
-        : '<p class="tone-muted">Aucune alerte sur cette enveloppe à cette séance.</p>'}</div>
-      <div class="d-sec"><h3>Demandes liées</h3>${dms.length ? dms.map(([id, st, ech]) => {
-        const d = DEMANDES[id];
-        return `<div class="d-item"><strong>${d.ref} : ${esc(d.titre)}</strong><span>${d.type === 'economie' ? '−' : ''}${fmt(d.montant)} MMAD, ${st === 'attente' ? 'en attente, ' + esc(ech) : st === 'validee' ? 'validée en séance' : 'refusée en séance'}</span></div>`;
-      }).join('') : '<p class="tone-muted">Aucune demande sur cette enveloppe à cette séance.</p>'}</div>
-    </div>
-    <div class="drawer-foot">
-      <button class="btn-ghost" type="button" data-denv="${prev.id}" title="${esc(prev.nom)}">${ICON.prev} Précédente</button>
-      <button class="btn-ghost" type="button" data-denv="${next.id}" title="${esc(next.nom)}">Suivante ${ICON.next}</button>
-    </div>`;
-}
-
-function openDrawer(envId, trigger) {
-  if (!currentEd) return;
-  lastFocus = trigger || document.activeElement;
-  renderDrawer(envId);
-  overlay.hidden = false;
-  requestAnimationFrame(() => { overlay.classList.add('show'); drawer.classList.add('open'); });
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => $('#drawerClose')?.focus(), 60);
-}
-function closeDrawer() {
-  if (!drawer.classList.contains('open')) return;
-  overlay.classList.remove('show'); drawer.classList.remove('open');
-  document.body.style.overflow = '';
-  setTimeout(() => { overlay.hidden = true; }, 260);
-  if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
-}
-overlay.addEventListener('click', closeDrawer);
-drawer.addEventListener('click', e => {
-  if (e.target.closest('#drawerClose')) return closeDrawer();
-  const n = e.target.closest('[data-denv]');
-  if (n) { renderDrawer(n.dataset.denv); $('#drawerClose').focus(); }
+/* Clavier */
+document.addEventListener('keydown',e=>{
+  const typing=/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)&&document.activeElement.type!=='range';
+  if(e.key==='Escape'){if(S.sel)closePanel();else if(typing)document.activeElement.blur();return}
+  if(typing)return;
+  if(e.key==='/'){e.preventDefault();$('q').focus()}
+  if(document.activeElement===slider)return;
+  if(e.key==='ArrowRight'){e.preventDefault();setT(S.T+1)}
+  if(e.key==='ArrowLeft'){e.preventDefault();setT(S.T-1)}
 });
 
-/* ---------- Notification ---------- */
-let toastTimer = 0;
-function toast(msg) {
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+let first=true;
+function update(){
+  renderTop();
+  const rows=visible();
+  if(S.view==='gantt')renderGantt(rows,first);else renderBoard(rows);
+  first=false;
 }
-
-/* ---------- Évènements ---------- */
-app.addEventListener('click', e => {
-  const env = e.target.closest('[data-env]');
-  if (env) return openDrawer(env.dataset.env, env);
-  const tgt = e.target.closest('[data-target]');
-  if (tgt) return scrollToSec(tgt.dataset.target);
-  const dec = e.target.closest('[data-decide]');
-  if (dec) return decide(dec.dataset.id, dec.dataset.decide);
-  const f = e.target.closest('[data-filter]');
-  if (f) return filterAlerts(f.dataset.filter);
-  const ph = e.target.closest('[data-phase]');
-  if (ph) return setPhase(ph.dataset.phase);
-  const act = e.target.closest('[data-action]');
-  if (act) { if (act.dataset.action === 'print') window.print(); else if (act.dataset.action === 'reset-sim') resetSim(); return; }
-  const row = e.target.closest('tr[data-href]');
-  if (row && !e.target.closest('a')) location.hash = row.dataset.href;
-});
-app.addEventListener('keydown', e => {
-  const row = e.target.closest('tr[data-env]');
-  if (row && e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDrawer(row.dataset.env, row); }
-});
-
-document.addEventListener('keydown', e => {
-  if (drawer.classList.contains('open')) {
-    if (e.key === 'Escape') { e.preventDefault(); closeDrawer(); }
-    else if (e.key === 'Tab') {
-      const f = $$('button, [href], [tabindex]:not([tabindex="-1"])', drawer);
-      if (!f.length) return;
-      const first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    }
-    return;
-  }
-  if (!currentEd || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-  const a = document.activeElement;
-  if (a && (/INPUT|TEXTAREA|SELECT/.test(a.tagName) || a.closest('.chart, .tbl-wrap, .subnav-inner'))) return;
-  const eds = editionsOf(currentEd.instance), i = eds.indexOf(currentEd);
-  const t = e.key === 'ArrowLeft' ? eds[i + 1] : eds[i - 1];
-  if (t) location.hash = edHash(t);
-});
-
-/* ---------- Routeur ---------- */
-function route() {
-  closeDrawer();
-  const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  let ed = null;
-  if (parts[0] === 'seance') ed = EDITIONS.find(e => e.instance === parts[1] && e.date === parts[2]) || null;
-  else if (parts[0] === 'instance') ed = latestOf(parts[1]) || null;
-  if (ed) renderDashboard(ed); else { watchResize(null); spySecs = []; renderHome(); }
-  window.scrollTo(0, 0);
-  app.focus({ preventScroll: true });
-}
-
-applyTheme();
-addEventListener('hashchange', route);
-route();
-})();
+(()=>{const w=$('gscroll').clientWidth-parseInt(getComputedStyle(document.documentElement).getPropertyValue('--lw'))-2;const dw=Math.max(34,Math.min(72,Math.floor(w/N)));document.documentElement.style.setProperty('--dw',dw+'px');$('zoom').value=dw})();
+loadDone().finally(update);
 </script>
 </body>
 </html>
